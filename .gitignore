@@ -48,3 +48,4 @@ public/system/*
 .*.kate-swp
 *.orig
 .DS_Store
+.directory

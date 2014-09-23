@@ -6,9 +6,16 @@ Gem::Specification.new do |s|
   s.email = "tech@elpulgardelpanda.com"
   s.platform = Gem::Platform::RUBY
   s.summary = "A world-record-fast task runner based on Ruby processes"
+
   s.files = `git ls-files`.split("\n")
   s.test_files = `git ls-files -- test/*`.split("\n")
-  s.require_path = "lib"
+  s.require_paths = ['lib']
+  s.executables = ['bolt_watchdog']
+
+  s.add_runtime_dependency 'mongo', '~> 1.10.2'
+  s.add_runtime_dependency 'bson_ext', '~> 1.10.2'
+  # stones... but stones is on Gemfile while we need it from git
+
   s.required_ruby_version = '>= 2.1.0'
   s.has_rdoc = false
 end

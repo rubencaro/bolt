@@ -4,18 +4,19 @@
 # si no, debe reiniciar el wrapper
 
 # on crontab:
-#    * * * * * /bin/bash -l -c '/path/to/bolt_watchdog.sh'
+#    * * * * * /bin/bash -l -c '/path/to/bolt_watchdog /path/to/app'
 
 directory=$(cd `dirname $0` && pwd)
-app="$directory/../.."
+app=$1
 logs="$app/log/flagella.log"
+lib=$(readlink -f $directory/../lib)
 flagellum="bolt.rb"
-command="$directory/$flagellum"
+command="$lib/$flagellum"
 
-. $app/lib/shell_helpers.sh
+. $lib/shell_helpers.sh
 
 # comprobar que solo se esta ejecutando un proceso flagelo, y si no saca el hacha
-check_multiple_flagella "$directory" "$flagellum" >> $logs
+check_multiple_flagella "$lib" "$flagellum" >> $logs
 
 # echo "------ CARNAGE: $CARNAGE   --------   FLAGELLUM_PROCESS_COUNT: $FLAGELLUM_PROCESS_COUNT " >> $logs
 
