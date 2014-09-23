@@ -5,7 +5,6 @@ $:.unshift 'lib'
 $:.unshift 'app'
 require 'rubygems'
 require 'bundler/setup'
-require 'shared_constants'
 require 'helpers/log'
 require 'helpers/process'
 require 'helpers/system'
@@ -130,9 +129,9 @@ module Bolt
     raise ex # everything is broken already, no problem on making further noise
   ensure
     H.killall pids
-    piper.kill
-    main_read.close
-    main_write.close
+    piper.kill if piper
+    main_read.close if main_read
+    main_write.close if main_write
   end
 
   def self.dispatch_tasks(opts)

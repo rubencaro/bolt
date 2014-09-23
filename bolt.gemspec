@@ -14,6 +14,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'mongo', '~> 1.10.2'
   s.add_runtime_dependency 'bson_ext', '~> 1.10.2'
+  s.add_runtime_dependency 'mail','2.5.3'
   # stones... but stones is on Gemfile while we need it from git
 
   s.required_ruby_version = '>= 2.1.0'
