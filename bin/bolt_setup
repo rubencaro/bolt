@@ -12,8 +12,8 @@ File.open('bolt_watchdog','w+') do |f|
 f.write <<WRP#!/usr/bin/env bash
 
 # call bolt_watchdog.sh passing app's folder
-#{bolt_path}/lib/bolt_watchdog.sh "#{Dir.pwd}"
+$(bundle show bolt)/lib/bolt_watchdog.sh "#{Dir.pwd}"
 WRP
-end
+end.chmod(777)
 
 puts 'Done'
