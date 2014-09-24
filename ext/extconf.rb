@@ -12,3 +12,4 @@
 
 =end
 
+puts "Putting scripts on path..."
