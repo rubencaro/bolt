@@ -12,4 +12,18 @@
 
 =end
 
-puts "Putting scripts on path..."
+puts "Fooling rubygems..."
+
+# fake Makefile
+File.open('Makefile','w+') do |f|
+
+f.write <<MF
+
+all:
+\t/usr/bin/touch ./bolt.so
+
+install:
+
+MF
+
+end
