@@ -9,11 +9,11 @@ bolt_path = Bundler.load.specs.find{|s| s.name == 'bolt'}.full_gem_path
 
 # create bash wrapper passing app's folder
 File.open('bolt_watchdog','w+') do |f|
-f.write <<WRP#!/usr/bin/env bash
-
-# call bolt_watchdog.sh passing app's folder
-$(bundle show bolt)/lib/bolt_watchdog.sh "#{Dir.pwd}"
-WRP
-end.chmod(777)
+  f.write <<WRP#!/usr/bin/env bash
+    # call bolt_watchdog.sh passing app's folder
+    $(bundle show bolt)/lib/bolt_watchdog.sh "#{Dir.pwd}"
+  WRP
+  f.chmod(777)
+end
 
 puts 'Done'
