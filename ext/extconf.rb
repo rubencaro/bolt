@@ -12,6 +12,12 @@
 
 =end
 
+require 'rubygems'
+
+puts "Putting actual executables on #{Gem.bindir}..."
+
+`ln -sf #{File.expand_path('../bin')}/bolt_watchdog #{Gem.bindir}`
+
 puts "Fooling rubygems..."
 
 # fake Makefile
