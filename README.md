@@ -56,6 +56,9 @@ Fields on the mongo document and used by Bolt are:
 * `run_at`: timestamp for the start of the task. When it exists, task will not
 be started by Bolt until it's in the past.
 
+You are free to add as many fields as mongo can support. They will be passed
+along to yout task.
+
 ## Use
 
 Add it to your `Gemfile`, and add `stones` too:
