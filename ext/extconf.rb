@@ -13,10 +13,11 @@
 =end
 
 require 'rubygems'
+require 'bundler/setup'
 
-puts "Putting actual executables on #{Gem.bindir}..."
+puts "Putting actual executable on #{Gem.bin_path('bolt', 'bolt_watchdog')}..."
 
-`ln -sf #{File.expand_path('../bin')}/bolt_watchdog #{Gem.bindir}`
+`ln -sf #{File.expand_path('../bin')}/bolt_watchdog #{Gem.bin_path('bolt', 'bolt_watchdog')}`
 
 puts "Fooling rubygems..."
 
