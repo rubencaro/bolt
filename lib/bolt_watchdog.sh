@@ -7,9 +7,8 @@
 #    * * * * * /bin/bash -l -c '/path/to/app/bolt_watchdog.sh /path/to/app'
 
 app=$1
-directory=$(cd `dirname $0` && pwd)
+lib=$(cd `dirname $0` && pwd)
 logs="$app/log/flagella.log"
-lib=$(readlink -f $directory/../lib)
 flagellum="bolt.rb"
 command="$lib/$flagellum"
 
