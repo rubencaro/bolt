@@ -48,6 +48,7 @@ serializable will not be available for the task, or for the notification emails.
 Fields on the mongo document and used by Bolt are:
 
 * `task`: the name of the task, also of the module and the file defining it.
+The only mandatory.
 * `timeout`: timeout for the task to end. Default is 300 secs.
 * `dispatched`: boolean indicating whether Bolt started processing that task.
 * `success`: when defined, indicates the result of the execution.
