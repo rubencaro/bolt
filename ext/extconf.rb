@@ -12,9 +12,6 @@
 
 =end
 
-require 'rubygems'
-require 'bundler/setup'
-
 app_path = File.dirname ENV['BUNDLE_GEMFILE']
 
 puts "Putting actual executable on #{app_path}..."
