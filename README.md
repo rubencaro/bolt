@@ -2,6 +2,8 @@
 
 He is a fast runner.
 
+## What
+
 Reads tasks from a mongo table called `task_queue` on a db called
 `bolt_#{CURRENT_ENV}`, where `CURRENT_ENV` can be one of `production`,
 `development`(the default) or `test`.
@@ -33,8 +35,15 @@ Bolt will use that same mongo document afterwards to send success (or failure)
 emails depending on whether the execution ended normally or any exception was
 raised.
 
+By now, tasks are always removed from db when done.
+
 Tasks are isolated on their own process, so they have freedom to do nasty
-things. They won't corrupt Bolt or the other tasks.
+things. They won't corrupt Bolt or the other tasks. They can require any
+gems allowed by the environment where Bolt is running.
+
+Also, everything in the mongo document must be JSON serializable, as it has to
+be passed through pipes when communicating between processes. Anything not
+serializable will not be available for the task, or for the notification emails.
 
 Fields on the mongo document and used by Bolt are:
 
@@ -47,4 +56,18 @@ Fields on the mongo document and used by Bolt are:
 * `run_at`: timestamp for the start of the task. When it exists, task will not
 be started by Bolt until it's in the past.
 
+## Use
 
+Add it to your `Gemfile`, and add `stones` too:
+
+    gem 'bolt', :git => 'git@github.com:epdp/bolt.git'
+    gem 'stones', :git => 'git@github.com:epdp/stones.git'
+
+Fix your tags when your app is stable.
+
+After `bundle install` you should run `bolt_setup` from your app's folder. That
+will create a wrapper of the `bolt_watchdog` for that version of Bolt and for
+your app. That is the script you should run from your `cron` every minute to
+ensure Bolt is always up.
+
+Take a look at the code for more details...
