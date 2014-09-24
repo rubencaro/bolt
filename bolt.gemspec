@@ -19,4 +19,11 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 2.1.0'
   s.has_rdoc = false
+
+  s.post_install_message = "
+
+      Now you should run `bolt_setup` from your app's folder, and add the
+      resulting `bolt_watchdog` to your crontab.
+
+  "
 end
