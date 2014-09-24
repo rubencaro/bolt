@@ -15,9 +15,11 @@
 require 'rubygems'
 require 'bundler/setup'
 
-puts "Putting actual executable on #{Gem.bin_path('bolt', 'bolt_watchdog')}..."
+app_path = File.dirname ENV['BUNDLE_GEMFILE']
 
-`ln -sf #{File.expand_path('../bin')}/bolt_watchdog #{Gem.bin_path('bolt', 'bolt_watchdog')}`
+puts "Putting actual executable on #{app_path}..."
+
+`ln -sf #{File.expand_path('../bin')}/bolt_watchdog #{app_path}`
 
 puts "Fooling rubygems..."
 
