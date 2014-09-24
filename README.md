@@ -53,7 +53,8 @@ The only mandatory.
 * `dispatched`: boolean indicating whether Bolt started processing that task.
 * `success`: when defined, indicates the result of the execution.
 * `ex`, `backtrace`: failure details when the task fails.
-* `email`: email recipient for the notification emails.
+* `email`: email recipient for the notification emails. Defaults to
+`tech+bolt at elpulgardelpanda.com`.
 * `run_at`: timestamp for the start of the task. When it exists, task will not
 be started by Bolt until it's in the past.
 
