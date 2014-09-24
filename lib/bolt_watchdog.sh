@@ -4,10 +4,10 @@
 # si no, debe reiniciar el wrapper
 
 # on crontab:
-#    * * * * * /bin/bash -l -c '/path/to/bolt_watchdog /path/to/app'
+#    * * * * * /bin/bash -l -c '/path/to/app/bolt_watchdog.sh /path/to/app'
 
-directory=$(cd `dirname $0` && pwd)
 app=$1
+directory=$(cd `dirname $0` && pwd)
 logs="$app/log/flagella.log"
 lib=$(readlink -f $directory/../lib)
 flagellum="bolt.rb"

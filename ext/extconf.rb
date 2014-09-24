@@ -3,7 +3,7 @@
 
   Fake extension building
 
-  This allows for putting our bash scripts on the path, letting rubygems
+  This allows for performing any install time logic, letting rubygems
   think we are compiling something...
 
   To fool rubygems we need a fake Makefile which can run `make all` and
@@ -12,15 +12,9 @@
 
 =end
 
-app_path = File.dirname ENV['BUNDLE_GEMFILE']
+# Do whatever you want here
 
-puts "Putting actual executable on #{app_path}..."
-
-`ln -sf #{File.expand_path('../bin')}/bolt_watchdog #{app_path}`
-
-puts "Fooling rubygems..."
-
-# fake Makefile
+# Fake Makefile that fools rubygems
 File.open('Makefile','w+') do |f|
 
 f.write <<MF

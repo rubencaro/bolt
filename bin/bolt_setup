@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'bundler/setup'
+
+print "Creating wrapper for bolt_watchdog on current folder..."
+
+bolt_path = Bundler.load.specs.find{|s| s.name == 'bolt'}.full_gem_path
+
+# create bash wrapper passing app's folder
+File.open('bolt_watchdog','w+') do |f|
+f.write <<WRP#!/usr/bin/env bash
+
+# call bolt_watchdog.sh passing app's folder
+#{bolt_path}/lib/bolt_watchdog.sh "#{Dir.pwd}"
+WRP
+end
+
+puts 'Done'
