@@ -78,6 +78,8 @@ ensure Bolt is always up. Such as:
 
     * * * * * /bin/bash -l -c 'nice /path/to/app/bolt_watchdog'
 
+## Running
+
 On every loop of the main dispatcher, Bolt will run
 `touch ~/flagella/timestamps/bolt__60__300` signalling it's still alive. That
 file is meant to be monitorized by `luther`. `bolt` being all that's needed to
@@ -90,6 +92,11 @@ This is meant to be used on deploys or plain restarts. Write your tasks so they
 can be interrupted at any time.
 
 Logging will be done on `/path/to/app/log/flagella.log`.
+
+All this folders and files should exist in production. You can create them by
+yourself, or you can run `bundle exec bolt_setup` from your app's folder on
+production to let bolt create them.
+
 
 Take a look at the code for more details...
 
