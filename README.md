@@ -68,7 +68,8 @@ Add it to your `Gemfile`, and add `stones` too:
     gem 'bolt', :git => 'git@github.com:epdp/bolt.git'
     gem 'stones', :git => 'git@github.com:epdp/stones.git'
 
-Fix your tags when your app is stable.
+Be careful with your `stones` version. It should match Bolt's needs. Freeze your
+tags when your app is stable.
 
 After `bundle install` you should run `bolt_setup` from your app's folder. That
 will create a wrapper of the `bolt_watchdog` for that version of Bolt and for
