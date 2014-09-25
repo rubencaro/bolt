@@ -76,3 +76,11 @@ your app. That is the script you should run from your `cron` every minute to
 ensure Bolt is always up.
 
 Take a look at the code for more details...
+
+## TODOs
+
+* Expose configurable things.
+* Finish already planned testing.
+* Reduce Bolt weight as much as possible.
+
+
