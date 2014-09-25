@@ -78,6 +78,19 @@ ensure Bolt is always up. Such as:
 
     * * * * * /bin/bash -l -c 'nice /path/to/app/bolt_watchdog'
 
+On every loop of the main dispatcher, Bolt will run
+`touch ~/flagella/timestamps/bolt__60__300` signalling it's still alive. That
+file is meant to be monitorized by `luther`. `bolt` being all that's needed to
+find the running process using `pgrep`, `60` the timeout to trigger a warning,
+and `300` the timeout to consider Bolt is a useless zombie worth being killed.
+
+Also Bolt will kill itself when it detects any change (a gentle `touch` is
+enough) on `/path/to/app/tmp/kill.flagella` or `/path/to/app/tmp/kill.bolt`.
+This is meant to be used on deploys or plain restarts. Write your tasks so they
+can be interrupted at any time.
+
+Logging will be done on `/path/to/app/log/flagella.log`.
+
 Take a look at the code for more details...
 
 ## TODOs
@@ -88,5 +101,6 @@ Take a look at the code for more details...
 * Add periodic task support.
 * Maybe add persistence of task in db (maybe a history/log in a capped
 collection).
+* Support non interruptible tasks.
 
 

@@ -4,7 +4,14 @@
 # si no, debe reiniciar el wrapper
 
 # on crontab:
-#    * * * * * /bin/bash -l -c '/path/to/app/bolt_watchdog.sh /path/to/app'
+#    * * * * * /bin/bash -l -c '/path/to/watchdog/bolt_watchdog.sh /path/to/app'
+
+# on bundler environments there should be a stub calling this script
+#
+#   #!/usr/bin/env bash
+#   cd `dirname $0`
+#   $(bundle show bolt)/lib/bolt_watchdog.sh "$(pwd)"
+#
 
 app=$1
 lib=$(cd `dirname $0` && pwd)
