@@ -24,6 +24,6 @@ print "Setting up process control files..."
 `mkdir tmp > /dev/null`
 `touch tmp/kill.flagella`
 `touch tmp/kill.bolt`
-`mkdir -p ~/flagella/timestamps`
+`mkdir -p ~/flagella/timestamps > /dev/null`
 `mkdir log > /dev/null`
 puts 'Done'
