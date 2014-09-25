@@ -82,5 +82,8 @@ Take a look at the code for more details...
 * Expose configurable things.
 * Finish already planned testing.
 * Reduce Bolt weight as much as possible.
+* Add periodic task support.
+* Maybe add persistence of task in db (maybe a history/log in a capped
+collection).
 
 
