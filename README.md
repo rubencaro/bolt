@@ -73,7 +73,9 @@ Fix your tags when your app is stable.
 After `bundle install` you should run `bolt_setup` from your app's folder. That
 will create a wrapper of the `bolt_watchdog` for that version of Bolt and for
 your app. That is the script you should run from your `cron` every minute to
-ensure Bolt is always up.
+ensure Bolt is always up. Such as:
+
+    `* * * * * /bin/bash -l -c 'nice /path/to/app/bolt_watchdog'`
 
 Take a look at the code for more details...
 
