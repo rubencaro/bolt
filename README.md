@@ -98,6 +98,20 @@ yourself, or you can run `bundle exec bolt_setup` from your app's folder on
 production to let bolt create them.
 
 
+## Interrupting and recycling tasks
+
+You should design your tasks (any software!) to be fault-tolerant. They can be
+(will be!) interrupted at any time. Solar storms, sysops will, or devops fault
+are only three normal causes for that.
+
+Current Bolt implementation will _recycle_ tasks that were started and then
+interrupted (i.e. Bolt will run them again). You should be aware of this and
+code your task to be able to recover itself from the point it was interrupted,
+or to be rerun without harm.
+
+Just try to write functional code and everything will flow.
+
+
 ## Developing
 
 Testing: `ruby -Itest test/all.rb`
