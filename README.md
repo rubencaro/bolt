@@ -49,7 +49,9 @@ The structure of the mongo document passed to your task may be different from
 the one you could expect directly from the mongo client. It has been serialized
 and deserialized. For example, the document `_id` is found in
 `task['_id']['$oid']` instead of `task['_id']`, because of the serialization of
-the `BSON::ObjectId` instance that lived in `task['_id']`.
+the `BSON::ObjectId` instance that lived in `task['_id']`. Bolt recreates the
+`BSON::ObjectId` for you before yielding the task to your task, so you don't
+have to worry about that. But ok, it was just an example...
 
 Bolt defines a module `Bolt::Helpers` meant to be used form inside your tasks.
 For example, you can grab a connection to Bolt's queue, that lives inside a
