@@ -98,6 +98,13 @@ yourself, or you can run `bundle exec bolt_setup` from your app's folder on
 production to let bolt create them.
 
 
+## Developing
+
+Testing: `ruby -Itest test/all.rb`
+
+Work in branches. When you branch is merged into master
+[semantic versioning](https://semver.org) will be used for tagging.
+
 Take a look at the code for more details...
 
 ## TODOs
@@ -111,4 +118,8 @@ collection).
 * Support non interruptible tasks.
 * Document standalone deploy.
 
+
+## Read the code
+
+Please read the code of the gems you use. Make the world a better place.
 
