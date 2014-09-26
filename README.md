@@ -71,9 +71,9 @@ Add it to your `Gemfile`, and add `stones` too:
 Be careful with your `stones` version. It should match Bolt's needs. Freeze your
 tags when your app is stable.
 
-Actually, as your task will run in a fork from Bolt itself, you should take a
-look at what Bolt has already loaded when your task starts. It's meant to evolve
-towards a minimum, reaching it someday.
+As your task will run in a fork from Bolt itself, you should take a look at what
+Bolt has already loaded when your task starts. It's meant to evolve towards a
+minimum, reaching it someday.
 
 After `bundle install` you should run `bolt_setup` from your app's folder. That
 will create a wrapper of the `bolt_watchdog` for that version of Bolt and for
