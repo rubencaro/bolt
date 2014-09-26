@@ -136,9 +136,9 @@ If your task interacts with Bolt you may want to test it together with Bolt. As
 long as you configure `stones` to be in the test environment, you should be able
 to test your tasks like this:
 
-    CURRENT_ENV = 'test'
-    require 'config/stones' # stones' config
-    require 'helpers/test'
+    CURRENT_ENV = 'test' # your app's env
+    require 'config/stones' # your app's stones' config
+    require 'helpers/test' # BasicTestCase, or use your own test_helper
     require 'bolt'
     require 'mail' # to assert email sending
 
