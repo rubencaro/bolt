@@ -10,7 +10,6 @@ require 'helpers/string'
 require 'helpers/path'
 require 'json'
 require 'thread'
-require 'timeout'
 
 require_relative 'bolt/helpers'
 require_relative 'bolt/email'
@@ -63,13 +62,10 @@ module Bolt
                          queue: @@queue,
                          tasks_count: -1,
                          tasks_folder: 'bolt/tasks',
-                         piper_timeout: 0) # deactivated by default
+                         piper_timeout: 5)
 
     @@db = db
     @@queue = queue
-
-    # default timeout for testing
-    piper_timeout = 2 if piper_timeout == 0 and CURRENT_ENV == 'test'
 
     coll = Bolt::Helpers.get_mongo_collection
     pids = []
@@ -98,14 +94,7 @@ module Bolt
       i = 0
       loop do
         # perform gets inside a timeout, break if times out
-        ended_task = {}
-        begin
-          Timeout::timeout(piper_timeout) do
-            ended_task = JSON.parse(main_read.gets)
-          end
-        rescue Timeout::Error
-          break
-        end
+        ended_task = JSON.parse(main_read.gets)
 
         if ended_task['success'] then
           Bolt::Email.success :task => ended_task
@@ -182,7 +171,9 @@ module Bolt
       begin
         H.log "Starting race for '#{task['task']}'... On your marks, ready, go!"
 
-        task['timeout'] ||= 300.0
+        default_timeout = 300.0
+        default_timeout = 2.0 if CURRENT_ENV == 'test'
+        task['timeout'] ||= default_timeout
         Timeout.timeout( task['timeout'].to_f ) do
           begin
 
