@@ -123,6 +123,7 @@ Take a look at the code for more details...
 
 ## TODOs
 
+* Support notification body set from the task.
 * Expose configurable things.
 * Finish already planned testing.
 * Reduce Bolt weight as much as possible.
