@@ -192,6 +192,7 @@ module Bolt
 
             require "#{opts[:tasks_folder]}/#{task['task']}"
             # run is defined in the task file
+            task['_id'] = BSON::ObjectId.from_string task['_id']['$oid']
             Bolt::Tasks.const_get(task['task'].camelize).run :task => task
 
             task[:success] = true
