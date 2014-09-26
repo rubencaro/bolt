@@ -10,6 +10,7 @@ require 'helpers/string'
 require 'helpers/path'
 require 'json'
 require 'thread'
+require 'timeout'
 
 require_relative 'bolt/helpers'
 require_relative 'bolt/email'
@@ -51,15 +52,24 @@ module Bolt
 
   class NotEnoughTasks < StandardError; end
 
-  # wait for tasks on queue
+  # Wait for tasks on queue and dispatch them to processes
+  #
+  # If you pass a `tasks_count` Bolt will run only that many tasks. Also it will
+  # raise NotEnoughTasks if there are less than `tasks_count` runnable tasks on
+  # queue. After running `tasks_count` tasks, it will exit.
+  #
+  #
   def self.dispatch_loop(db: @@db,
                          queue: @@queue,
                          tasks_count: -1,
                          tasks_folder: 'bolt/tasks',
-                         piper_timeout: 5)
+                         piper_timeout: 0) # deactivated by default
 
     @@db = db
     @@queue = queue
+
+    # default timeout for testing
+    piper_timeout = 2 if piper_timeout == 0 and CURRENT_ENV == 'test'
 
     coll = Bolt::Helpers.get_mongo_collection
     pids = []
@@ -87,7 +97,15 @@ module Bolt
       start_time = Time.now
       i = 0
       loop do
-        ended_task = JSON.parse(main_read.gets)
+        # perform gets inside a timeout, break if times out
+        ended_task = {}
+        begin
+          Timeout::timeout(piper_timeout) do
+            ended_task = JSON.parse(main_read.gets)
+          end
+        rescue Timeout::Error
+          break
+        end
 
         if ended_task['success'] then
           Bolt::Email.success :task => ended_task

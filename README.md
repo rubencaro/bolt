@@ -130,6 +130,39 @@ Work in branches. When you branch is merged into master
 
 Take a look at the code for more details...
 
+## Testing tasks
+
+If your task interacts with Bolt you may want to test it together with Bolt. As
+long as you configure `stones` to be in the test environment, you should be able
+to test your tasks like this:
+
+    CURRENT_ENV = 'test'
+    require 'config/stones' # stones' config
+    require 'helpers/test'
+    require 'bolt'
+    require 'mail' # to assert email sending
+
+    class YourTaskTest < BasicTestCase
+
+      def test_it_goes_on_inside_bolt
+        coll = Bolt::Helpers.get_mongo_collection
+        coll.remove # clear the queue
+        Mail::TestMailer.deliveries.clear
+
+        # add the task to the queue
+        coll.insert :task => 'your_task', :anything => 'else'
+
+        # call dispatch_loop, processing only one task
+        Bolt.dispatch_loop :tasks_count => 1
+
+        # check anything you expected
+        assert_equal 1, Mail::TestMailer.deliveries.count # it sent an email
+        assert coll.find().to_a.none? # queue is clean
+      end
+
+    end
+
+
 ## TODOs
 
 * Expose configurable things.
