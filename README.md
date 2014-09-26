@@ -145,14 +145,14 @@ to test your tasks like this:
     class YourTaskTest < BasicTestCase
 
       def test_it_goes_on_inside_bolt
-        coll = Bolt::Helpers.get_mongo_collection
+        coll = Bolt::Helpers.get_mongo_collection  # will be the testing one
         coll.remove # clear the queue
         Mail::TestMailer.deliveries.clear
 
         # add the task to the queue
         coll.insert :task => 'your_task', :anything => 'else'
 
-        # call dispatch_loop, processing only one task
+        # call dispatch_loop, processing only one task and leave
         Bolt.dispatch_loop :tasks_count => 1
 
         # check anything you expected
