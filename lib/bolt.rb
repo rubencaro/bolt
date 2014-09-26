@@ -207,12 +207,24 @@ module Bolt
     opts[:task] ||= {}
     to = opts[:task]['email'] || 'tech+bolt@elpulgardelpanda.com'
 
-    body = "Bolt nailed it! Again!<br/>"
-    body += "&nbsp;&nbsp;&nbsp;Original run request was: #{opts[:task].to_html_ul}"
+    opts[:task]['opts'] ||= {}
+    opts[:task]['opts']['email'] ||= {}
+    opts[:task]['opts']['email']['success'] ||= {}
+
+    subject = opts[:task]['opts']['email']['success']['subject'] ||
+              "Bolt nailed it! '#{opts[:task]['task'].to_s}'"
+
+    body = opts[:task]['opts']['email']['success']['body']
+    if body then
+      body += '<div style="display:none;">'
+    else
+      body = 'Bolt nailed it! Again!<br/><div>'
+    end
+    body += "&nbsp;&nbsp;&nbsp;Original run request was: #{opts[:task].to_html_ul} </div>"
 
     H.email :to => to,
             :body => body,
-            :subject => "Bolt nailed it! '#{opts[:task]['task'].to_s}'"
+            :subject => subject
   end
 
   def self.email_failure(opts)
@@ -225,14 +237,27 @@ module Bolt
     ex = opts[:task].delete 'ex'
     backtrace = opts[:task].delete 'backtrace'
 
-    body = "Something went wrong. Bolt could not run that race.<br/>"
+    opts[:task]['opts'] ||= {}
+    opts[:task]['opts']['email'] ||= {}
+    opts[:task]['opts']['email']['failure'] ||= {}
+
+    subject = opts[:task]['opts']['email']['failure']['subject'] ||
+              "Bolt could not run '#{opts[:task]['task'].to_s}'"
+
+    body = opts[:task]['opts']['email']['failure']['body']
+    if body then
+      body += '<div style="display:none;">'
+    else
+      body = 'Something went wrong. Bolt could not run that race.<br/><div>'
+    end
     body += "&nbsp;&nbsp;&nbsp;Original run request was: #{opts[:task].to_html_ul}"
     body += "&nbsp;&nbsp;&nbsp;Exception was: #{ex}" if ex
     body += "<br/> trace: &nbsp;&nbsp;&nbsp;#{backtrace.to_html_ul}" if backtrace
+    body += "</div>"
 
     H.email :to => to,
             :body => body,
-            :subject => "Bolt could not run '#{opts[:task]['task'].to_s}'"
+            :subject => subject
   end
 
 end

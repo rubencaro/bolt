@@ -80,7 +80,40 @@ class BoltTest < BasicTestCase
 
   # Pass a body to Bolt.email_success
   def test_use_email_body_from_task
-    todo
+
+    # create a task giving specific success email options
+    body = 'specific body'
+    subject = 'specificier subject'
+    @coll.insert({:task => 'constant_a',
+                  :opts => { :email => { :success => { :body => body,
+                                                       :subject => subject } } } } )
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+
+    # sent success email has the specifics
+    mails = Mail::TestMailer.deliveries
+    assert_equal 1, mails.count, mails
+    assert_equal subject,  mails.first.subject, mails
+    assert mails.first.body.to_s.include?(body), mails
+    # and hidden techie details
+    assert mails.first.body.to_s.include?('<div style="display:none;">'), mails
+
+    # create a task giving specific failure email options
+    H::Log.swallow! 1
+    Mail::TestMailer.deliveries.clear
+    body = 'specific body'
+    subject = 'specificier subject'
+    @coll.insert({:task => 'exception',
+                  :opts => { :email => { :failure => { :body => body,
+                                                       :subject => subject } } } } )
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+
+    # sent success email has the specifics
+    mails = Mail::TestMailer.deliveries
+    assert_equal 1, mails.count, mails
+    assert_equal subject,  mails.first.subject, mails
+    assert mails.first.body.to_s.include?(body), mails
+    # and hidden techie details
+    assert mails.first.body.to_s.include?('<div style="display:none;">'), mails
   end
 
   # Execute a task at a given time
