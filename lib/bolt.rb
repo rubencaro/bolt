@@ -2,20 +2,17 @@
 CURRENT_ENV = ENV['CURRENT_ENV'] || 'development' if not defined? CURRENT_ENV
 
 $:.unshift 'lib'
-$:.unshift 'app'
 require 'rubygems'
 require 'bundler/setup'
 require 'helpers/log'
 require 'helpers/process'
-require 'helpers/system'
-require 'helpers/net'
 require 'helpers/string'
-require 'open-uri'
-require 'helpers/email'
 require 'helpers/path'
 require 'json'
 require 'thread'
-require 'mongo'
+
+require_relative 'bolt/helpers'
+require_relative 'bolt/email'
 
 =begin
 
@@ -53,14 +50,6 @@ module Bolt
   end
 
   class NotEnoughTasks < StandardError; end
-
-  module Helpers
-
-    def self.get_mongo_collection
-      Mongo::MongoClient.new.db(Bolt.db)[Bolt.queue]
-    end
-
-  end
 
   # wait for tasks on queue
   def self.dispatch_loop(db: @@db,
@@ -101,9 +90,9 @@ module Bolt
         ended_task = JSON.parse(main_read.gets)
 
         if ended_task['success'] then
-          Bolt.email_success :task => ended_task
+          Bolt::Email.success :task => ended_task
         else
-          Bolt.email_failure :task => ended_task
+          Bolt::Email.failure :task => ended_task
         end
 
         # by now, only clean the queue
@@ -203,7 +192,7 @@ module Bolt
         task[:success] = false
         task[:ex] = ex
         task[:backtrace] = ex.backtrace
-        Bolt.email_failure :task => task, :ex => ex
+        Bolt::Email.failure :task => task, :ex => ex
       ensure
         opts[:main_write].puts task.to_json
         exit! true # avoid fire at_exit hooks inherited from parent!
@@ -220,62 +209,7 @@ module Bolt
     opts[:pids].reject!{|pid| not File.exist?("/proc/#{pid}")}
   end
 
-  def self.email_success(opts)
-    opts[:task] ||= {}
-    to = opts[:task]['email'] || 'tech+bolt@elpulgardelpanda.com'
 
-    opts[:task]['opts'] ||= {}
-    opts[:task]['opts']['email'] ||= {}
-    opts[:task]['opts']['email']['success'] ||= {}
-
-    subject = opts[:task]['opts']['email']['success']['subject'] ||
-              "Bolt nailed it! '#{opts[:task]['task'].to_s}'"
-
-    body = opts[:task]['opts']['email']['success']['body']
-    if body then
-      body += '<div style="display:none;">'
-    else
-      body = 'Bolt nailed it! Again!<br/><div>'
-    end
-    body += "&nbsp;&nbsp;&nbsp;Original run request was: #{opts[:task].to_html_ul} </div>"
-
-    H.email :to => to,
-            :body => body,
-            :subject => subject
-  end
-
-  def self.email_failure(opts)
-    opts[:task] ||= {}
-    emails = []
-    emails << opts[:task]['email'] if opts[:task]['email']
-    emails << 'tech+bolt@elpulgardelpanda.com'
-    to = emails.join(',')
-
-    ex = opts[:task].delete 'ex'
-    backtrace = opts[:task].delete 'backtrace'
-
-    opts[:task]['opts'] ||= {}
-    opts[:task]['opts']['email'] ||= {}
-    opts[:task]['opts']['email']['failure'] ||= {}
-
-    subject = opts[:task]['opts']['email']['failure']['subject'] ||
-              "Bolt could not run '#{opts[:task]['task'].to_s}'"
-
-    body = opts[:task]['opts']['email']['failure']['body']
-    if body then
-      body += '<div style="display:none;">'
-    else
-      body = 'Something went wrong. Bolt could not run that race.<br/><div>'
-    end
-    body += "&nbsp;&nbsp;&nbsp;Original run request was: #{opts[:task].to_html_ul}"
-    body += "&nbsp;&nbsp;&nbsp;Exception was: #{ex}" if ex
-    body += "<br/> trace: &nbsp;&nbsp;&nbsp;#{backtrace.to_html_ul}" if backtrace
-    body += "</div>"
-
-    H.email :to => to,
-            :body => body,
-            :subject => subject
-  end
 
 end
 
