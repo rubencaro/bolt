@@ -43,19 +43,36 @@ The folder that contains the actual tasks code can be configured in
 
 module Bolt
 
+  @@db = "bolt_#{CURRENT_ENV}"
+  @@queue = 'task_queue'
+
+  def self.db; @@db; end
+  def self.queue; @@queue; end
+
   module Tasks # placeholder
   end
 
   class NotEnoughTasks < StandardError; end
 
+  module Helpers
+
+    def self.get_mongo_collection
+      Mongo::MongoClient.new.db(Bolt.db)[Bolt.queue]
+    end
+
+  end
+
   # wait for tasks on queue
-  def self.dispatch_loop(db: "bolt_#{CURRENT_ENV}",
-                         queue: 'task_queue',
+  def self.dispatch_loop(db: @@db,
+                         queue: @@queue,
                          tasks_count: -1,
                          tasks_folder: 'bolt/tasks',
                          piper_timeout: 5)
 
-    coll = Mongo::MongoClient.new.db(db)[queue]
+    @@db = db
+    @@queue = queue
+
+    coll = Bolt::Helpers.get_mongo_collection
     pids = []
 
     # party stoppers
@@ -77,7 +94,7 @@ module Bolt
 
     # main thread to read from pipe
     piper = Thread.new do
-      piper_coll = Mongo::MongoClient.new.db(db)[queue] # not thread-safe?
+      piper_coll = Bolt::Helpers.get_mongo_collection # not thread-safe
       start_time = Time.now
       i = 0
       loop do

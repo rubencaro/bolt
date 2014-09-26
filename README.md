@@ -45,6 +45,11 @@ Also, everything in the mongo document must be JSON serializable, as it has to
 be passed through pipes when communicating between processes. Anything not
 serializable will not be available for the task, or for the notification emails.
 
+Bolt defines a module `Bolt::Helpers` meant to be used form inside your tasks.
+For example, you can grab a connection to Bolt's queue, that lives inside a
+mongo collection, by calling `Bolt::Helpers.get_mongo_collection` anywhere in
+your code.
+
 Fields on the mongo document and used by Bolt are:
 
 * `task`: the name of the task, also of the module and the file defining it.
