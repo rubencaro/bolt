@@ -109,5 +109,6 @@ Take a look at the code for more details...
 * Maybe add persistence of task in db (maybe a history/log in a capped
 collection).
 * Support non interruptible tasks.
+* Document standalone deploy.
 
 
