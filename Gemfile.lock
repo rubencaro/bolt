@@ -1,9 +1,9 @@
 GIT
   remote: git@github.com:epdp/stones.git
-  revision: 1eb9745d53c4472c708e748a18f469d4e46f3c93
-  tag: 1.0.0-pre7
+  revision: d4e6948e7e2891bb886a223dad4a28c7e391931f
+  tag: 1.0.0-pre8
   specs:
-    stones (1.0.0.pre7)
+    stones (1.0.0.pre8)
 
 PATH
   remote: .
