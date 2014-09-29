@@ -8,4 +8,4 @@ H.config do |config|
   config[:current_env] = CURRENT_ENV  # !!
 end
 
-require 'helpers/test'
+require 'helpers/test/basic'

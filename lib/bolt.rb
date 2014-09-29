@@ -96,6 +96,9 @@ module Bolt
         # perform gets inside a timeout, break if times out
         ended_task = JSON.parse(main_read.gets)
 
+        # save task if asked, all metadata is there
+        Bolt::Helpers.tasks << ended_task if Bolt::Helpers.tasks
+
         if ended_task['success'] then
           Bolt::Email.success :task => ended_task
         else
@@ -204,6 +207,7 @@ module Bolt
         task[:backtrace] = ex.backtrace
         Bolt::Email.failure :task => task, :ex => ex
       ensure
+        task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
         opts[:main_write].puts task.to_json
         exit! true # avoid fire at_exit hooks inherited from parent!
       end

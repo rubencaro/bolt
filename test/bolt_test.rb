@@ -116,6 +116,23 @@ class BoltTest < BasicTestCase
     assert mails.first.body.to_s.include?('<div style="display:none;">'), mails
   end
 
+  def test_saves_task_if_asked
+    H.announce
+
+    # no ask, no tasks
+    @coll.insert [{:task => 'constant_a'}]
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+    assert_equal nil, Bolt::Helpers.tasks
+
+    # now ask, then tasks
+    Bolt::Helpers.save_tasks!
+    @coll.insert [{:task => 'constant_a'}]
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+    tasks = Bolt::Helpers.tasks
+    assert_equal 1, tasks.count, tasks
+    assert_equal 'constant_a', tasks.first['task']
+  end
+
   # Execute a task at a given time
   def test_schedule
     H::Log.swallow! 1
