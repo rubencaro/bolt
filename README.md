@@ -156,6 +156,7 @@ to test your tasks like this:
         coll = Bolt::Helpers.get_mongo_collection  # will be the testing one
         coll.remove # clear the queue
         Mail::TestMailer.deliveries.clear
+        Bolt::Helpers.save_tasks! # to save task documents with their test_metadata
 
         # add the task to the queue
         coll.insert :task => 'your_task', :anything => 'else'
@@ -166,9 +167,22 @@ to test your tasks like this:
         # check anything you expected
         assert_equal 1, Mail::TestMailer.deliveries.count # it sent an email
         assert coll.find().to_a.none? # queue is clean
+        tasks = Bolt::Helpers.tasks # saved tasks
+        assert_equal 1, tasks.count, tasks
+        md = tasks.first['test_metadata'] # gathered test_metadata
+        assert_equal 38, md['system']['calls'].count, md
       end
 
     end
+
+Remember that Bolt forks itself and runs the task on that forked process. That
+means that the only way of communication is using the pipe (or using an external
+service). Bolt provides a mechanism to save a task's process' metadata, gathered
+by stones' helpers, on the task document under the key `test_metadata`. That
+task is then passed through the pipe and saved for you on `Bolt::Helpers.tasks`
+in the master process. Luckily that's the process you're running the test from.
+To activate the mechanism you should be on the `test` environment and run
+`Bolt::Helpers.save_tasks!`.
 
 
 ## TODOs
