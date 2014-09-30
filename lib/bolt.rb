@@ -8,6 +8,7 @@ require 'helpers/log'
 require 'helpers/process'
 require 'helpers/string'
 require 'helpers/path'
+require 'helpers/system'
 require 'json'
 require 'thread'
 
