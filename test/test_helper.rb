@@ -8,4 +8,10 @@ H.config do |config|
   config[:current_env] = CURRENT_ENV  # !!
 end
 
+require 'mail'
+
+Mail.defaults do
+  delivery_method :test
+end
+
 require 'helpers/test/basic'

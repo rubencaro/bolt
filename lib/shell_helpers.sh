@@ -243,7 +243,7 @@ function check_multiple_flagella {
   CARNAGE=0
   [ $FLAGELLUM_PROCESS_COUNT -gt 1 ] && echo "+++ $(date) +++ Multiples pids all:${all_pids[@]} unique:${unique_pids[@]}"
 
-  [ $has_init -gt 0 ] && kill_everyone=1 && echo "+++ $(date) +++ pid 1 detected in all:${all_pids[@]}"
+  [ $has_init -gt 0 ] && kill_everyone=0 && echo "+++ $(date) +++ pid 1 detected in all:${all_pids[@]}"
 
   [ $FLAGELLUM_PROCESS_COUNT -gt 1 ] && [ ${#all_pids[@]} -eq ${#unique_pids[@]} ] && kill_everyone=1
 
@@ -253,6 +253,54 @@ function check_multiple_flagella {
     kill -KILL $pids
     CARNAGE=1
   }
+}
+
+
+
+# Hace un ls de la carpeta dada, que debe contener solo archivos cuyo
+#   nombre es un PID. Típicamente creados haciendo touch desde el proceso que
+#   debe ser único.
+# Entonces borra los pids que ya no estén vivos.
+# Solo quedan los pids que estén realmente vivos.
+#
+# Si hay más de uno, los mata todos.
+#
+# También establece dos variables que pueden ser útiles en el entorno que hace la llamada:
+#    FLAGELLUM_PROCESS_COUNT  -> el número de flagelos detectado
+#    CARNAGE  ->  0: no hubo carnicería, 1: se mataron todos los procesos con el nombre dado
+#
+# Usage: check_pids_folder_for_uniqueness 'directory'
+#
+function check_pids_folder_for_uniqueness {
+  local folder="${1?}"
+  local kill_everyone=0
+
+  local pids=( $(ls $folder) )
+
+  local alive_pids=( )
+  for pid in ${pids[@]}; do
+    [ -d /proc/$pid ] && alive_pids+=( $pid )
+    [ -d /proc/$pid ] || rm $folder/$pid
+  done
+
+  containsElement "1" "${pids[@]}"
+  local has_init=$?
+
+  FLAGELLUM_PROCESS_COUNT=${#alive_pids[@]}
+  CARNAGE=0
+  [ $FLAGELLUM_PROCESS_COUNT -gt 1 ] && echo "+++ $(date) +++ Multiples pids all:${pids[@]} alive:${alive_pids[@]}"
+
+  [ $has_init -gt 0 ] && kill_everyone=0 && echo "+++ $(date) +++ pid 1 detected in all:${pids[@]}"
+
+  [ $FLAGELLUM_PROCESS_COUNT -gt 1 ]  && kill_everyone=1
+
+  [ $kill_everyone -gt 0 ] && {
+    echo "+++ $(date) +++ Multiples procesos vivos en $folder ! pids: ${alive_pids[@]} Matandolos a todos..."
+    kill -KILL $pids
+    rm $folder/*
+    CARNAGE=1
+  }
+
 }
 
 

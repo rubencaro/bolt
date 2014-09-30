@@ -82,6 +82,8 @@ module Bolt
     H.watch_file(Dir.pwd + "/tmp/kill.flagella", m)
     H.watch_file(Dir.pwd + "/tmp/kill.bolt", m)
 
+    H.exec "touch ~/flagella/bolt/pids/#{Process.pid}"
+
     # load recycled_tasks
     recycled_tasks = coll.find({ 'dispatched' => { '$exists' => true } }).to_a
 
