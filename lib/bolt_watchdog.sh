@@ -18,7 +18,7 @@ lib=$(cd `dirname $0` && pwd)
 logs="$app/log/flagella.log"
 flagellum="bolt.rb"
 command="$lib/$flagellum"
-pids_folder="~/flagella/bolt/pids"
+pids_folder="$HOME/flagella/bolt/pids"
 mkdir -p $pids_folder > /dev/null
 
 . $lib/shell_helpers.sh
@@ -26,7 +26,7 @@ mkdir -p $pids_folder > /dev/null
 # comprobar que solo se esta ejecutando un proceso flagelo, y si no saca el hacha
 check_pids_folder_for_uniqueness "$pids_folder" >> $logs
 
-# echo "------ CARNAGE: $CARNAGE   --------   FLAGELLUM_PROCESS_COUNT: $FLAGELLUM_PROCESS_COUNT " >> $logs
+#echo "------ CARNAGE: $CARNAGE   --------   FLAGELLUM_PROCESS_COUNT: $FLAGELLUM_PROCESS_COUNT " >> $logs
 
 # comprobar flagelo
 [ $FLAGELLUM_PROCESS_COUNT -gt 0 ] && [ $CARNAGE -eq 0 ] && exit 0

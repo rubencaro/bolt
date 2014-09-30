@@ -296,7 +296,7 @@ function check_pids_folder_for_uniqueness {
 
   [ $kill_everyone -gt 0 ] && {
     echo "+++ $(date) +++ Multiples procesos vivos en $folder ! pids: ${alive_pids[@]} Matandolos a todos..."
-    kill -KILL $pids
+    kill -KILL ${alive_pids[@]}
     rm $folder/*
     CARNAGE=1
   }
