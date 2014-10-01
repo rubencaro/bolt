@@ -49,7 +49,7 @@ module Bolt
 
       body = opts[:task]['opts']['email']['failure']['body']
       if body then
-        body += '<br>(Details are on invisible ink...)\n\n\n\n<div style="display:none !important;">'
+        body += "<br>(Details are on invisible ink...)<div style=\"display:none !important;\">\n\n\n\n"
       else
         body = 'Something went wrong. Bolt could not run that race.<br/><div>'
       end
