@@ -18,15 +18,16 @@ module Bolt
 
       body = opts[:task]['opts']['email']['success']['body']
       if body then
-        body += '<div style="display:none;">'
+        body += '<div style="display:none !important;">'
       else
         body = 'Bolt nailed it! Again!<br/><div>'
       end
-      body += "&nbsp;&nbsp;&nbsp;Original run request was: #{opts[:task].to_html_ul} </div>"
+      body += "Original run request was: #{opts[:task].inspect} </div>"
 
       H.email :to => to,
               :body => body,
-              :subject => subject
+              :subject => subject,
+              :content_type => 'text/html'
     end
 
     def self.failure(opts)
@@ -48,18 +49,19 @@ module Bolt
 
       body = opts[:task]['opts']['email']['failure']['body']
       if body then
-        body += '<div style="display:none;">'
+        body += '<div style="display:none !important;">'
       else
         body = 'Something went wrong. Bolt could not run that race.<br/><div>'
       end
-      body += "&nbsp;&nbsp;&nbsp;Original run request was: #{opts[:task].to_html_ul}"
-      body += "&nbsp;&nbsp;&nbsp;Exception was: #{ex}" if ex
-      body += "<br/> trace: &nbsp;&nbsp;&nbsp;#{backtrace.to_html_ul}" if backtrace
+      body += "Original run request was: #{opts[:task].inspect}"
+      body += "Exception was: #{ex}" if ex
+      body += "<br/> trace: #{backtrace.inspect}" if backtrace
       body += "</div>"
 
       H.email :to => to,
               :body => body,
-              :subject => subject
+              :subject => subject,
+              :content_type => 'text/html'
     end
 
   end
