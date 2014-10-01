@@ -1,9 +1,12 @@
 #!/usr/bin/env ruby
 CURRENT_ENV = ENV['CURRENT_ENV'] || 'development' if not defined? CURRENT_ENV
 
-$:.unshift 'lib'
+$:.unshift '.','lib'
 require 'rubygems'
 require 'bundler/setup'
+
+require 'config/bolt' # bolt config for the app
+
 require 'helpers/log'
 require 'helpers/process'
 require 'helpers/string'
