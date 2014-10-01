@@ -78,6 +78,7 @@ module Bolt
     m = Module.new do
       def self.file_modified(file)
         H.log "Suiciding now (from #{File.basename file})..."
+        H.killall pids
         exit 0
       end
     end
