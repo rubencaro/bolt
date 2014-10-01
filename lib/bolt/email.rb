@@ -17,11 +17,10 @@ module Bolt
                 "Bolt nailed it! '#{opts[:task]['task'].to_s}'"
 
       body = opts[:task]['opts']['email']['success']['body']
-      if body then
-        body += '<br>(Details are on invisible ink...)\n\n\n\n<div style="display:none !important;">'
-      else
-        body = 'Bolt nailed it! Again!<br/><div>'
+      if not body then
+        body = "Bolt nailed it! Again!<br/>Task #{task['task']} is complete."
       end
+      body += "<br>(Details are on invisible ink...)<div style=\"display:none !important;\">\n\n\n\n"
       body += "Original run request was: #{opts[:task].inspect} </div>"
 
       H.email :to => to,
@@ -48,14 +47,14 @@ module Bolt
                 "Bolt could not run '#{opts[:task]['task'].to_s}'"
 
       body = opts[:task]['opts']['email']['failure']['body']
-      if body then
-        body += "<br>(Details are on invisible ink...)<div style=\"display:none !important;\">\n\n\n\n"
-      else
-        body = 'Something went wrong. Bolt could not run that race.<br/><div>'
+      if not body then
+        body = "Something went wrong. Bolt could not run that race.<br>"
+        body += "Exception was: #{ex}" if ex
       end
+      body += "<br>(Details are on invisible ink...)<div style=\"display:none !important;\">\n\n\n\n"
       body += "Original run request was: #{opts[:task].inspect}"
-      body += "Exception was: #{ex}" if ex
-      body += "<br/> trace: #{backtrace.inspect}" if backtrace
+      body += "\n\n Exception was: #{ex}" if ex
+      body += "\n\n trace: #{backtrace.inspect}" if backtrace
       body += "</div>"
 
       H.email :to => to,
