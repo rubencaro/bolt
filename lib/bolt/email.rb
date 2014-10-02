@@ -18,7 +18,7 @@ module Bolt
 
       body = opts[:task]['opts']['email']['success']['body']
       if not body then
-        body = "Bolt nailed it! Again!<br/>Task #{task['task']} is complete."
+        body = "Bolt nailed it! Again!<br/>Task #{opts[:task]['task']} is complete."
       end
       body += "<br>(Details are on invisible ink...)<div style=\"display:none !important;\">\n\n\n\n"
       body += "Original run request was: #{opts[:task].inspect} </div>"

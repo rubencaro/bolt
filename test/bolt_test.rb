@@ -95,7 +95,7 @@ class BoltTest < BasicTestCase
     assert_equal subject,  mails.first.subject, mails
     assert mails.first.body.to_s.include?(body), mails
     # and hidden techie details
-    assert mails.first.body.to_s.include?('<div style="display:none;">'), mails
+    assert mails.first.body.to_s.include?('<div style="display:none !important;">'), mails
 
     # create a task giving specific failure email options
     H::Log.swallow! 1
@@ -113,7 +113,7 @@ class BoltTest < BasicTestCase
     assert_equal subject,  mails.first.subject, mails
     assert mails.first.body.to_s.include?(body), mails
     # and hidden techie details
-    assert mails.first.body.to_s.include?('<div style="display:none;">'), mails
+    assert mails.first.body.to_s.include?('<div style="display:none !important;">'), mails
   end
 
   def test_saves_task_if_asked

@@ -76,9 +76,9 @@ module Bolt
 
     # party stoppers
     m = Module.new do
-      def self.file_modified(file)
+      def self.file_modified(file, opts = {})
         H.log "Suiciding now (from #{File.basename file})..."
-        H.killall pids
+        H.killall opts[:pids]
         exit 0
       end
     end
@@ -144,7 +144,7 @@ module Bolt
       end
 
       H.exec "touch ~/flagella/timestamps/bolt__60__300"
-      H.check_watched_files
+      H.check_watched_files :pids => pids
     end
 
   rescue => ex
