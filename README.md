@@ -132,16 +132,6 @@ or to be rerun without harm.
 
 Just try to write functional code and everything will flow.
 
-
-## Developing
-
-Testing: `ruby -Itest test/all.rb`
-
-Work in branches. When you branch is merged into master
-[semantic versioning](https://semver.org) will be used for tagging.
-
-Take a look at the code for more details...
-
 ## Testing tasks
 
 If your task interacts with Bolt you may want to test it together with Bolt. As
@@ -204,4 +194,14 @@ collection).
 ## Read the code
 
 Please read the code of the gems you use. Make the world a better place.
+
+
+## Developing
+
+Testing: `ruby -Itest test/all.rb`
+
+Work in branches. When you branch is merged into master
+[semantic versioning](https://semver.org) will be used for tagging.
+
+Take a look at the code for more details...
 
