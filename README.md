@@ -132,6 +132,26 @@ or to be rerun without harm.
 
 Just try to write functional code and everything will flow.
 
+## Queueing tasks for Bolt
+
+Someone should put tasks in the queue for Bolt to process. How this is done
+depends really on the place from where you do it. From generic ruby code one
+could do this:
+
+    require 'bolt' # that already loads bolt's config
+
+    # this will use a plain mongo client
+    coll = Bolt::Helpers.get_mongo_collection
+
+    # you can use your own special client
+    coll = MySpecialMongoClient.new(Bolt.db)[Bolt.queue]
+
+    # it's mongo, just do it!
+    coll.insert :task => 'my_task',  # it's defined on bolt/tasks/my_task.rb
+                :email => 'notify@only.to.me', # add any other Bolt parameters
+                :more => 'data'      # anything else, it's a mongo doc
+
+
 ## Testing tasks
 
 If your task interacts with Bolt you may want to test it together with Bolt. As
