@@ -140,7 +140,11 @@ to test your tasks like this:
 
     CURRENT_ENV = 'test' # your app's env
     require 'config/stones' # your app's stones' config
-    require 'helpers/test' # BasicTestCase, or use your own test_helper
+    require 'helpers/test' # BasicTestCase, or use your own TestCase class
+
+    # all code above usually will go on some kind of test_helper file
+    # but this way you can see actual Bolt dependencies for test
+    
     require 'bolt'
     require 'mail' # to assert email sending
 
