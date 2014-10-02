@@ -177,7 +177,7 @@ module Bolt
       end
     end
 
-    opts[:pids] += H.dispatch_in_processes(tasks) do |task|
+    new_pids = H.dispatch_in_processes(tasks) do |task|
       begin
         H.log "Starting race for '#{task['task']}'... On your marks, ready, go!"
 
@@ -219,6 +219,9 @@ module Bolt
         exit! true # avoid fire at_exit hooks inherited from parent!
       end
     end
+
+    # add to the existing one, do not create a new one
+    opts[:pids].concat new_pids
 
     # mark all tasks as dispatched
     tids = tasks.map{|t| t['_id']}
