@@ -5,8 +5,6 @@ require 'bundler/setup'
 
 print "Creating wrapper for bolt_watchdog on current folder..."
 
-bolt_path = Bundler.load.specs.find{|s| s.name == 'bolt'}.full_gem_path
-
 # create bash wrapper passing app's folder
 File.open('bolt_watchdog','w+') do |f|
   f.write <<WRP
@@ -19,6 +17,25 @@ WRP
 end
 
 puts 'Done'
+
+print "Creating bolt config file..."
+
+# create bash wrapper passing app's folder
+if not File.exist?('config/bolt.rb') then
+  File.open('config/bolt.rb','w+') do |f|
+    f.write <<WRP
+#
+#   Bolt will require this file before start.
+#
+
+require_relative 'stones'  # load local stones' config
+WRP
+  end
+  puts 'Done'
+else
+  puts 'Already exists'
+end
+
 
 print "Setting up process control files..."
 `mkdir -p tmp > /dev/null`
