@@ -95,6 +95,10 @@ ensure Bolt is always up. Such as:
 
     * * * * * /bin/bash -l -c 'nice /path/to/app/bolt_watchdog'
 
+`bolt_setup` will also create a `config/bolt.rb` file that will be loaded by
+Bolt once when it starts. There you want to put your initialization code for
+`stones`, for example.
+
 ## Running
 
 On every loop of the main dispatcher, Bolt will run
