@@ -3,7 +3,7 @@ source "https://rubygems.org"
 gemspec
 
 # to be on gemspec when it's solid gem
-gem 'stones', :git => 'git@github.com:epdp/stones.git', :tag => '1.0.0-pre11'
+gem 'stones', :git => 'git@github.com:epdp/stones.git', :tag => '1.0.0-pre12'
 
 group :development, :test do
   gem 'minitest'
