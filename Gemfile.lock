@@ -1,3 +1,10 @@
+GIT
+  remote: git@github.com:epdp/stones.git
+  revision: 57af0e5e70b4966c64b7dc65b700f2e2cfd29127
+  tag: 1.0.0-pre13
+  specs:
+    stones (1.0.0.pre12)
+
 PATH
   remote: .
   specs:
@@ -5,13 +12,6 @@ PATH
       bson_ext (~> 1.10.2)
       mail (~> 2.5.3)
       mongo (~> 1.10.2)
-
-GIT
-  remote: git@github.com:epdp/stones.git
-  revision: 57af0e5e70b4966c64b7dc65b700f2e2cfd29127
-  tag: 1.0.0-pre13
-  specs:
-    stones (1.0.0.pre12)
 
 GEM
   remote: https://rubygems.org/

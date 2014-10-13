@@ -18,6 +18,14 @@ end
 
 puts 'Done'
 
+puts <<-MSG
+
+You can use it from your cron like this:
+
+* * * * * /bin/bash -l -c '/path/to/app/bolt_watchdog'
+
+MSG
+
 print "Creating bolt config file..."
 
 # create bash wrapper passing app's folder
