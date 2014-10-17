@@ -146,11 +146,13 @@ The mongo document itself can be used to persist the task outcome. Like this:
     # wait for A
     taskA = nil
     H.wait_for :timeout => 300, :step => 5 do
-      taskA = coll.find({ '_id' => idA }).to_a.first
+      taskA = coll.find_one '_id' => idA
       taskA['finished']  # true when done
     end
 
     puts taskA['my_saved_results']     # or wherever the A task saved them
+
+    coll.remove( '_id' => idA )        # remember to clean up
 
 
 ## Interrupting and recycling tasks
