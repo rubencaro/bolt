@@ -63,13 +63,17 @@ Fields on the mongo document and used by Bolt are:
 * `task`: the name of the task, also of the module and the file defining it.
 The only mandatory.
 * `timeout`: timeout for the task to end. Default is 300 secs.
-* `dispatched`: boolean indicating whether Bolt started processing that task.
+* `dispatched`: boolean, whether Bolt started processing that task.
 * `success`: when defined, indicates the result of the execution.
 * `ex`, `backtrace`: failure details when the task fails.
 * `email`: email recipient for the notification emails. Defaults to
 `tech+bolt at elpulgardelpanda.com`.
 * `run_at`: timestamp for the start of the task. When it exists, task will not
 be started by Bolt until it's in the past.
+* `persist`: boolean, don't remove the task after it's done
+* `finished`: boolean, whether Bolt ended processing that task (only makes sense
+if `persist`...).
+* `silent`: don't send notifications, save data in the task for further process
 
 You are free to add as many fields as mongo can support. They will be passed
 along to yout task.
@@ -117,6 +121,36 @@ Logging will be done on `/path/to/app/log/flagella.log`.
 All this folders and files should exist in production. You can create them by
 yourself, or you can run `bundle exec bolt_setup` from your app's folder on
 production to let bolt create them.
+
+
+## Composite tasks
+
+You can create tasks that schedule, run and report other tasks. You only need to
+use `Bolt` helpers to schedule the tasks, and then to retrieve them afterwards.
+The mongo document itself can be used to persist the task outcome. Like this:
+
+    coll = Bolt::Helpers.get_mongo_collection
+
+    # schedule A
+    idA = coll.insert :task => 'my_taskA',
+                :persist => true,     # don't remove the task once it's done
+                :silent => true,      # don't send notifications
+                :more => 'data'       # anything else, it's a mongo doc
+
+    # schedule B
+    idB = coll.insert :task => 'my_taskB',
+                :persist => true,
+                :silent => true,
+                :more => 'data'
+
+    # wait for A
+    taskA = nil
+    H.wait_for :timeout => 300, :step => 5 do
+      taskA = coll.find({ '_id' => idA }).to_a.first
+      taskA['finished']  # true when done
+    end
+
+    puts taskA['my_saved_results']     # or wherever the A task saved them
 
 
 ## Interrupting and recycling tasks
@@ -209,8 +243,6 @@ To activate the mechanism you should be on the `test` environment and run
 * Finish already planned testing.
 * Reduce Bolt weight as much as possible.
 * Add periodic task support.
-* Maybe add persistence of task in db (maybe a history/log in a capped
-collection).
 * Support non interruptible tasks.
 * Document standalone deploy.
 
