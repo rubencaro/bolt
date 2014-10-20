@@ -74,6 +74,8 @@ be started by Bolt until it's in the past.
 * `finished`: boolean, whether Bolt ended processing that task (only makes sense
 if `persist`...).
 * `silent`: don't send notifications, save data in the task for further process
+* `expire`: remove from db when this Date arrives. If it's not there, doc is not
+removed.
 
 You are free to add as many fields as mongo can support. They will be passed
 along to yout task.
@@ -134,12 +136,14 @@ The mongo document itself can be used to persist the task outcome. Like this:
     # schedule A
     idA = coll.insert :task => 'my_taskA',
                 :persist => true,     # don't remove the task once it's done
+                :expire => Time.now + 3600,  # remove after 1 hour, just in case this crashes
                 :silent => true,      # don't send notifications
                 :more => 'data'       # anything else, it's a mongo doc
 
     # schedule B
     idB = coll.insert :task => 'my_taskB',
                 :persist => true,
+                :expire => Time.now + 3600,
                 :silent => true,
                 :more => 'data'
 

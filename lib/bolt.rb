@@ -72,6 +72,8 @@ module Bolt
     @@queue = queue
 
     coll = Bolt::Helpers.get_mongo_collection
+    # ensure expiration TTL index is there
+    coll.ensure_index 'expire', :expireAfterSeconds => 0
     pids = []
 
     # party stoppers
