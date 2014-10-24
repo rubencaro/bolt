@@ -19,6 +19,7 @@ for that module, passing the complete mongo document for this task.
 
 Inside `bolt/tasks/my_example_task.rb` things look like this:
 
+```ruby
     module Bolt
       module Tasks
         module MyExampleTask
@@ -30,6 +31,7 @@ Inside `bolt/tasks/my_example_task.rb` things look like this:
         end
       end
     end
+```
 
 Bolt will use that same mongo document afterwards to send success (or failure)
 emails depending on whether the execution ended normally or any exception was
@@ -78,14 +80,16 @@ if `persist`...).
 removed.
 
 You are free to add as many fields as mongo can support. They will be passed
-along to yout task.
+along to your task.
 
 ## Use
 
 Add it to your `Gemfile`, and add `stones` too:
 
+```ruby
     gem 'bolt', :git => 'git@github.com:epdp/bolt.git'
     gem 'stones', :git => 'git@github.com:epdp/stones.git'
+```
 
 Be careful with your `stones` version. It should match Bolt's needs. Freeze your
 tags when your app is stable.
@@ -99,7 +103,9 @@ will create a wrapper of the `bolt_watchdog` for that version of Bolt and for
 your app. That is the script you should run from your `cron` every minute to
 ensure Bolt is always up. Such as:
 
+```bash
     * * * * * /bin/bash -l -c 'nice /path/to/app/bolt_watchdog'
+```
 
 `bolt_setup` will also create a `config/bolt.rb` file that will be loaded by
 Bolt once when it starts. There you want to put your initialization code for
@@ -131,6 +137,7 @@ Someone should put tasks in the queue for Bolt to process. How this is done
 depends really on the place from where you do it. From generic ruby code one
 could do this:
 
+```ruby
     require 'bolt' # that already loads bolt's config
 
     # the task's hash
@@ -144,6 +151,7 @@ could do this:
     # you can use your own special client
     coll = MySpecialMongoClient.new(Bolt.db)[Bolt.queue]
     coll.insert task_data # it's mongo, just do it!
+```
 
 
 ## Composite tasks
@@ -152,6 +160,7 @@ You can create tasks that schedule, run and report other tasks. You only need to
 use `Bolt` helpers to schedule the tasks, and then to retrieve them afterwards.
 The mongo document itself can be used to persist the task outcome. Like this:
 
+```ruby
     bh = Bolt::Helpers # namespaces are good
 
     # schedule A
@@ -166,6 +175,7 @@ The mongo document itself can be used to persist the task outcome. Like this:
     puts taskA['my_saved_results']     # or wherever the A task saved them
 
     bh.remove idA                    # remember to clean up
+```
 
 `schedule_subtask` inserts the given task into the queue with some options
 suitable for subtasks, such as `persist`, `expire` and `silent`. Do not override
@@ -191,6 +201,7 @@ If your task interacts with Bolt you may want to test it together with Bolt. As
 long as you configure `stones` to be in the test environment, you should be able
 to test your tasks like this:
 
+```ruby
     CURRENT_ENV = 'test' # your app's env
     require 'config/stones' # your app's stones' config
     require 'helpers/test/basic' # BasicTestCase, or use your own TestCase class
@@ -225,6 +236,7 @@ to test your tasks like this:
       end
 
     end
+```
 
 Remember that Bolt forks itself and runs the task on that forked process. That
 means that the only way of communication is using the pipe (or using an external
@@ -239,7 +251,6 @@ To activate the mechanism you should be on the `test` environment and run
 ## TODOs
 
 * Expose configurable things.
-* Finish already planned testing.
 * Reduce Bolt weight as much as possible.
 * Add periodic task support.
 * Support non interruptible tasks.
