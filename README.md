@@ -125,6 +125,27 @@ yourself, or you can run `bundle exec bolt_setup` from your app's folder on
 production to let bolt create them.
 
 
+## Queueing tasks for Bolt
+
+Someone should put tasks in the queue for Bolt to process. How this is done
+depends really on the place from where you do it. From generic ruby code one
+could do this:
+
+    require 'bolt' # that already loads bolt's config
+
+    # the task's hash
+    task_data = { :task => 'my_task',  # it's defined on bolt/tasks/my_task.rb
+                  :email => 'notify@only.to.me', # add any other Bolt parameters
+                  :more => 'data' }    # anything else, it's a mongo doc
+
+    # this will use a plain mongo client
+    Bolt::Helpers.schedule task_data
+
+    # you can use your own special client
+    coll = MySpecialMongoClient.new(Bolt.db)[Bolt.queue]
+    coll.insert task_data # it's mongo, just do it!
+
+
 ## Composite tasks
 
 You can create tasks that schedule, run and report other tasks. You only need to
@@ -162,26 +183,6 @@ code your task to be able to recover itself from the point it was interrupted,
 or to be rerun without harm.
 
 Just try to write functional code and everything will flow.
-
-## Queueing tasks for Bolt
-
-Someone should put tasks in the queue for Bolt to process. How this is done
-depends really on the place from where you do it. From generic ruby code one
-could do this:
-
-    require 'bolt' # that already loads bolt's config
-
-    # the task's hash
-    task_data = { :task => 'my_task',  # it's defined on bolt/tasks/my_task.rb
-                  :email => 'notify@only.to.me', # add any other Bolt parameters
-                  :more => 'data' }    # anything else, it's a mongo doc
-
-    # this will use a plain mongo client
-    Bolt::Helpers.schedule task_data
-
-    # you can use your own special client
-    coll = MySpecialMongoClient.new(Bolt.db)[Bolt.queue]
-    coll.insert task_data # it's mongo, just do it!
 
 
 ## Testing tasks
@@ -259,3 +260,15 @@ Work in branches. When you branch is merged into master
 
 Take a look at the code for more details...
 
+
+## Changelog
+
+### 0.3.0
+
+* Add throttle
+* Add more helpers
+* Add composite tasks
+
+### 0.2.0
+
+* First production version

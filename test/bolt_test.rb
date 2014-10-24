@@ -167,4 +167,9 @@ class BoltTest < BasicTestCase
       Bolt.dispatch_loop @opts.merge(:tasks_count => 3, :throttle => 2)
     end
   end
+
+  def test_composite
+    H.announce
+    todo
+  end
 end
