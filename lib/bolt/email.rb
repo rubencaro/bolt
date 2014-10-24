@@ -1,4 +1,5 @@
 
+require 'helpers/generic'
 require 'helpers/email'
 
 module Bolt
@@ -9,14 +10,10 @@ module Bolt
       opts[:task] ||= {}
       to = opts[:task]['email'] || 'tech+bolt@elpulgardelpanda.com'
 
-      opts[:task]['opts'] ||= {}
-      opts[:task]['opts']['email'] ||= {}
-      opts[:task]['opts']['email']['success'] ||= {}
-
-      subject = opts[:task]['opts']['email']['success']['subject'] ||
+      subject = opts[:task].get?('opts','email','success','subject') ||
                 "Bolt nailed it! '#{opts[:task]['task'].to_s}'"
 
-      body = opts[:task]['opts']['email']['success']['body']
+      body = opts[:task].get? 'opts','email','success','body'
       if not body then
         body = "Bolt nailed it! Again!<br/>Task #{opts[:task]['task']} is complete."
       end
@@ -39,14 +36,10 @@ module Bolt
       ex = opts[:task].delete 'ex'
       backtrace = opts[:task].delete 'backtrace'
 
-      opts[:task]['opts'] ||= {}
-      opts[:task]['opts']['email'] ||= {}
-      opts[:task]['opts']['email']['failure'] ||= {}
-
-      subject = opts[:task]['opts']['email']['failure']['subject'] ||
+      subject = opts[:task].get?('opts','email','failure','subject') ||
                 "Bolt could not run '#{opts[:task]['task'].to_s}'"
 
-      body = opts[:task]['opts']['email']['failure']['body']
+      body = opts[:task].get? 'opts','email','failure','body'
       if not body then
         body = "Something went wrong. Bolt could not run that race.<br>"
         body += "Exception was: #{ex}" if ex

@@ -170,6 +170,11 @@ class BoltTest < BasicTestCase
 
   def test_composite
     H.announce
-    todo
+
+    # run composite task
+    Bolt::Helpers.schedule :task => 'composite'
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1, :rounds => 3)
+
+
   end
 end

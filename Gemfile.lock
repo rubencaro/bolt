@@ -1,6 +1,6 @@
 GIT
   remote: git@github.com:epdp/stones.git
-  revision: 67c792c6e05e0f4f79534f84dbe2af7fcf04439d
+  revision: 04d2e032e1460f3bfff7d3ac6348ed4618532cfa
   specs:
     stones (1.0.0.pre12)
 

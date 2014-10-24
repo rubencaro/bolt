@@ -1,5 +1,6 @@
 require 'mongo'
 require 'helpers/system'
+require 'helpers/log'
 
 module Bolt
   module Helpers
@@ -21,6 +22,7 @@ module Bolt
     # If an array of tasks is given, an array of IDs is returned.
     #
     def self.schedule(task)
+      H.log "Scheduling #{task}"
       get_mongo_collection.insert task
     end
 
@@ -34,9 +36,9 @@ module Bolt
       schedule data.merge(opts)
     end
 
-    # Wait for given task's ID to finish. Raise Timeout::Error if it doesn't.
+    # Wait for given task's ID to finish.
     # You can give custom `timeout` and `step` in seconds.
-    # Returns the task fresh from DB.
+    # Returns the task fresh from DB. Returns nil if it doesn't finish on time.
     #
     def self.wait_for(id, opts = {})
       timeout = opts[:timeout] || 300
@@ -48,6 +50,8 @@ module Bolt
         taskA['finished']  # true when done
       end
       taskA
+    rescue Exception
+      nil
     end
 
     # Remove given task's ID from the queue.

@@ -161,27 +161,40 @@ use `Bolt` helpers to schedule the tasks, and then to retrieve them afterwards.
 The mongo document itself can be used to persist the task outcome. Like this:
 
 ```ruby
-    bh = Bolt::Helpers # namespaces are good
+    module Bolt::Tasks
+      module Composite
+        def self.run(args)
+          bh = Bolt::Helpers # namespaces are good
 
-    # schedule A
-    idA = bh.schedule_subtask :task => 'my_taskA', :more => 'data'
+          # schedule A
+          idA = bh.schedule_subtask :task => 'my_taskA', :more => 'data'
 
-    # schedule B
-    idB = bh.schedule_subtask :task => 'my_taskB', :more => 'data'
+          # schedule B
+          idB = bh.schedule_subtask :task => 'my_taskB', :more => 'data'
 
-    # wait for A
-    taskA = bh.wait_for idA
+          # wait for A
+          taskA = bh.wait_for idA
 
-    puts taskA['my_saved_results']     # or wherever the A task saved them
+          raise "Oh no!" if not taskA      # task did not finish on time
 
-    bh.remove idA                    # remember to clean up
+          do_something_with taskA['my_saved_results']   # or wherever the A task saved them
 
-    # go on with B ...
+          # go on with B ...
+
+        ensure  # remember to clean up
+          bh.remove idA if idA
+          bh.remove idB if idB
+        end
+      end
+    end
 ```
 
 `schedule_subtask` inserts the given task into the queue with some options
 suitable for subtasks, such as `persist`, `expire` and `silent`. Do not override
 them if you don't want to interfere with it's expected process.
+
+`wait_for` return `nil` if the task is not finished on time. Your task should
+handle the situation when it comes.
 
 ## Interrupting and recycling tasks
 

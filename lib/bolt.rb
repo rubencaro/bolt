@@ -60,13 +60,21 @@ module Bolt
   # Wait for tasks on queue and dispatch them to processes
   #
   # If you pass a `tasks_count` Bolt will run only that many tasks. Also it will
-  # raise NotExpectedNumberOfTasks if there are less than `tasks_count` runnable tasks on
-  # queue. After running `tasks_count` tasks, it will exit.
+  # raise NotExpectedNumberOfTasks if there are less than `tasks_count` runnable
+  # tasks on queue. After running `tasks_count` tasks, it will exit.
+  # Default is -1 (disabled).
   #
+  # If you pass a `rounds` then it will perform that number of rounds processing
+  # `tasks_count` tasks on each loop. Default is 1. No sleep is done
+  # between rounds.
+  #
+  # If you pass a `throttle` then it will try not to have more than `throttle`
+  # alive tasks at any given time. Default is 5.
   #
   def self.dispatch_loop(db: @@db,
                          queue: @@queue,
                          tasks_count: -1,
+                         rounds: 1,
                          tasks_folder: 'bolt/tasks',
                          piper_timeout: 5,
                          throttle: @@throttle)
@@ -74,6 +82,7 @@ module Bolt
     @@db = db
     @@queue = queue
     @@throttle = throttle
+    total_tasks_count = tasks_count * rounds
 
     coll = Bolt::Helpers.get_mongo_collection
     # ensure expiration TTL index is there
@@ -125,12 +134,13 @@ module Bolt
                         '_id' => BSON::ObjectId(ended_task['_id']['$oid']) )
         i += 1
         break if tasks_count > 0 and
-                  ( i >= tasks_count or
+                  ( i >= total_tasks_count or
                     (Time.now - start_time) > piper_timeout )
       end
     end
 
     # main loop dispatching tasks
+    r = 0
     loop do
       dispatch_tasks :coll => coll,
                      :pids => pids,
@@ -141,13 +151,16 @@ module Bolt
 
       recycled_tasks = [] # clean recycled_tasks
 
+      r += 1
       if tasks_count > 0 then # wait and end
-        pids.each{|pid| Process.wait pid}
+        pids.each{|pid| H.spit("Waiting for pid:#{pid}") and Process.wait pid}
         piper.join
-        break
-      else # infinite loop
-        sleep 5
+        break if r >= rounds # out of the loop
+        next # next in the loop
       end
+
+      # infinite loop
+      sleep 5
 
       H.exec "touch ~/flagella/timestamps/bolt__60__300"
       H.check_watched_files :pids => pids
