@@ -175,6 +175,8 @@ The mongo document itself can be used to persist the task outcome. Like this:
     puts taskA['my_saved_results']     # or wherever the A task saved them
 
     bh.remove idA                    # remember to clean up
+
+    # go on with B ...
 ```
 
 `schedule_subtask` inserts the given task into the queue with some options
