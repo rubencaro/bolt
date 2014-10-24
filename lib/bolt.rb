@@ -46,19 +46,21 @@ module Bolt
 
   @@db = "bolt_#{CURRENT_ENV}"
   @@queue = 'task_queue'
+  @@throttle = 5
 
   def self.db; @@db; end
   def self.queue; @@queue; end
+  def self.throttle; @@throttle; end
 
   module Tasks # placeholder
   end
 
-  class NotEnoughTasks < StandardError; end
+  class NotExpectedNumberOfTasks < StandardError; end
 
   # Wait for tasks on queue and dispatch them to processes
   #
   # If you pass a `tasks_count` Bolt will run only that many tasks. Also it will
-  # raise NotEnoughTasks if there are less than `tasks_count` runnable tasks on
+  # raise NotExpectedNumberOfTasks if there are less than `tasks_count` runnable tasks on
   # queue. After running `tasks_count` tasks, it will exit.
   #
   #
@@ -66,10 +68,12 @@ module Bolt
                          queue: @@queue,
                          tasks_count: -1,
                          tasks_folder: 'bolt/tasks',
-                         piper_timeout: 5)
+                         piper_timeout: 5,
+                         throttle: @@throttle)
 
     @@db = db
     @@queue = queue
+    @@throttle = throttle
 
     coll = Bolt::Helpers.get_mongo_collection
     # ensure expiration TTL index is there
@@ -163,19 +167,26 @@ module Bolt
     defaults = {}
     opts = defaults.merge(opts)
 
-    # uf que horror los queries de mongodb
-    query = { '$and' => [ { 'dispatched' => { '$exists' => false } },
-                          { '$or'  => [ { 'run_at' => { '$exists' => false } },
-                                        { '$and' => [ { 'run_at' => { '$exists' => true } },
-                                                      { 'run_at' => { '$lte' => Time.now.to_i } } ] } ] } ] }
-    tasks = opts[:coll].find(query).to_a
+    # limiting the number of tasks using configured throttle
+    slice = Bolt.throttle - opts[:pids].count - opts[:recycled_tasks].count
+
+    tasks = []
+    if slice > 0 then
+      # uf que horror los queries de mongodb
+      query = { '$and' => [ { 'dispatched' => { '$exists' => false } },
+                            { '$or'  => [ { 'run_at' => { '$exists' => false } },
+                                          { '$and' => [ { 'run_at' => { '$exists' => true } },
+                                                        { 'run_at' => { '$lte' => Time.now.to_i } } ] } ] } ] }
+      tasks = opts[:coll].find(query).limit(slice).to_a
+    end
+
     # add recycled_tasks to task list
     tasks += opts[:recycled_tasks]
 
     if opts[:tasks_count] > 0 then
       tasks = tasks[0..opts[:tasks_count]-1] # take only tasks_count
       if tasks.count < opts[:tasks_count] then # exactly that number
-        raise Bolt::NotEnoughTasks.new("Not enough tasks on the queue. There should be #{opts[:tasks_count]}. There are #{tasks.count}.")
+        raise Bolt::NotExpectedNumberOfTasks.new("Not enough tasks on the queue. There should be #{opts[:tasks_count]}. There are #{tasks.count}.")
       end
     end
 

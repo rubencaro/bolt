@@ -21,13 +21,13 @@ class BoltTest < BasicTestCase
 
     # run Bolt, it should raise that there are no tasks
     H::Log.swallow! 1
-    assert_raises Bolt::NotEnoughTasks do
+    assert_raises Bolt::NotExpectedNumberOfTasks do
       Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
     end
 
     # Check runtime isolation, a constant is defined in two tasks
     # There must be no redefinition
-    @coll.insert [{:task => 'constant_a'}, {:task => 'constant_b'}]
+    Bolt::Helpers.schedule [{:task => 'constant_a'}, {:task => 'constant_b'}]
     Bolt.dispatch_loop @opts.merge(:tasks_count => 2)
     # Both tasks should be cleaned up on exit whether they failed or not.
     rows = @coll.find.to_a
@@ -39,7 +39,7 @@ class BoltTest < BasicTestCase
 
     # Invalid task (no run method defined)
     Mail::TestMailer.deliveries.clear
-    @coll.insert [{:task => 'invalid'}]
+    Bolt::Helpers.schedule :task => 'invalid'
     H::Log.swallow! 1
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
     # Both tasks should be cleaned up on exit whether they failed or not.
@@ -53,7 +53,7 @@ class BoltTest < BasicTestCase
 
     # Exception raising task
     Mail::TestMailer.deliveries.clear
-    @coll.insert [{:task => 'exception'}]
+    Bolt::Helpers.schedule :task => 'exception'
     H::Log.swallow! 1
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
     # Both tasks should be cleaned up on exit whether they failed or not.
@@ -67,10 +67,11 @@ class BoltTest < BasicTestCase
   end
 
   def test_applies_task_timeout
+    H.announce
     H::Log.swallow! 1
     Mail::TestMailer.deliveries.clear
 
-    @coll.insert [{:task => 'timeout', :timeout => 0.01}]
+    Bolt::Helpers.schedule :task => 'timeout', :timeout => 0.01
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
 
     mails = Mail::TestMailer.deliveries
@@ -80,11 +81,12 @@ class BoltTest < BasicTestCase
 
   # Pass a body to Bolt.email_success
   def test_use_email_body_from_task
+    H.announce
 
     # create a task giving specific success email options
     body = 'specific body'
     subject = 'specificier subject'
-    @coll.insert({:task => 'constant_a',
+    Bolt::Helpers.schedule({:task => 'constant_a',
                   :opts => { :email => { :success => { :body => body,
                                                        :subject => subject } } } } )
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
@@ -102,7 +104,7 @@ class BoltTest < BasicTestCase
     Mail::TestMailer.deliveries.clear
     body = 'specific body'
     subject = 'specificier subject'
-    @coll.insert({:task => 'exception',
+    Bolt::Helpers.schedule({:task => 'exception',
                   :opts => { :email => { :failure => { :body => body,
                                                        :subject => subject } } } } )
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
@@ -120,13 +122,14 @@ class BoltTest < BasicTestCase
     H.announce
 
     # no ask, no tasks
-    @coll.insert [{:task => 'constant_a'}]
+    Bolt::Helpers.no_save_tasks!
+    Bolt::Helpers.schedule :task => 'constant_a'
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
     assert_equal nil, Bolt::Helpers.tasks
 
     # now ask, then tasks
     Bolt::Helpers.save_tasks!
-    @coll.insert [{:task => 'constant_a'}]
+    Bolt::Helpers.schedule :task => 'constant_a'
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
     tasks = Bolt::Helpers.tasks
     assert_equal 1, tasks.count, tasks
@@ -134,20 +137,34 @@ class BoltTest < BasicTestCase
   end
 
   # Execute a task at a given time
-  def test_schedule
+  def test_run_at
+    H.announce
     H::Log.swallow! 1
     Mail::TestMailer.deliveries.clear
-    @coll.insert [{:task => 'schedule', :run_at => Time.now.to_i + 10 }]
-    assert_raises Bolt::NotEnoughTasks do
+    Bolt::Helpers.schedule :task => 'schedule', :run_at => Time.now.to_i + 10
+    assert_raises Bolt::NotExpectedNumberOfTasks do
       Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
     end
 
-    @coll.insert [{:task => 'schedule', :run_at => Time.now.to_i }]
+    Bolt::Helpers.schedule :task => 'schedule', :run_at => Time.now.to_i
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
   end
 
   # No more than X forks at any given time
   def test_throttle
-    todo
+    H.announce
+
+    Bolt::Helpers.save_tasks!
+
+    # enqueue several tasks
+    3.times do |i|
+      Bolt::Helpers.schedule :task => 'constant_a', :i => i
+    end
+
+    # if we ask Bolt to run over throttle it complains, not enough tasks
+    H::Log.swallow! 1
+    assert_raises Bolt::NotExpectedNumberOfTasks do
+      Bolt.dispatch_loop @opts.merge(:tasks_count => 3, :throttle => 2)
+    end
   end
 end

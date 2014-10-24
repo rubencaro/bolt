@@ -131,33 +131,24 @@ You can create tasks that schedule, run and report other tasks. You only need to
 use `Bolt` helpers to schedule the tasks, and then to retrieve them afterwards.
 The mongo document itself can be used to persist the task outcome. Like this:
 
-    coll = Bolt::Helpers.get_mongo_collection
+    bh = Bolt::Helpers # namespaces are good
 
     # schedule A
-    idA = coll.insert :task => 'my_taskA',
-                :persist => true,     # don't remove the task once it's done
-                :expire => Time.now + 3600,  # remove after 1 hour, just in case this crashes
-                :silent => true,      # don't send notifications
-                :more => 'data'       # anything else, it's a mongo doc
+    idA = bh.schedule_subtask :task => 'my_taskA', :more => 'data'
 
     # schedule B
-    idB = coll.insert :task => 'my_taskB',
-                :persist => true,
-                :expire => Time.now + 3600,
-                :silent => true,
-                :more => 'data'
+    idB = bh.schedule_subtask :task => 'my_taskB', :more => 'data'
 
     # wait for A
-    taskA = nil
-    H.wait_for :timeout => 300, :step => 5 do
-      taskA = coll.find_one '_id' => idA
-      taskA['finished']  # true when done
-    end
+    taskA = bh.wait_for idA
 
     puts taskA['my_saved_results']     # or wherever the A task saved them
 
-    coll.remove( '_id' => idA )        # remember to clean up
+    bh.remove idA                    # remember to clean up
 
+`schedule_subtask` inserts the given task into the queue with some options
+suitable for subtasks, such as `persist`, `expire` and `silent`. Do not override
+them if you don't want to interfere with it's expected process.
 
 ## Interrupting and recycling tasks
 
@@ -180,16 +171,17 @@ could do this:
 
     require 'bolt' # that already loads bolt's config
 
+    # the task's hash
+    task_data = { :task => 'my_task',  # it's defined on bolt/tasks/my_task.rb
+                  :email => 'notify@only.to.me', # add any other Bolt parameters
+                  :more => 'data' }    # anything else, it's a mongo doc
+
     # this will use a plain mongo client
-    coll = Bolt::Helpers.get_mongo_collection
+    Bolt::Helpers.schedule task_data
 
     # you can use your own special client
     coll = MySpecialMongoClient.new(Bolt.db)[Bolt.queue]
-
-    # it's mongo, just do it!
-    coll.insert :task => 'my_task',  # it's defined on bolt/tasks/my_task.rb
-                :email => 'notify@only.to.me', # add any other Bolt parameters
-                :more => 'data'      # anything else, it's a mongo doc
+    coll.insert task_data # it's mongo, just do it!
 
 
 ## Testing tasks
