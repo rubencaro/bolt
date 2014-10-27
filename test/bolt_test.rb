@@ -14,6 +14,7 @@ class BoltTest < BasicTestCase
     @coll.db.eval 'db.dropDatabase()'
     Mail::TestMailer.deliveries.clear
     @opts = { :db => db, :tasks_folder => tasks_folder }
+    H::Log.swallow! 0
   end
 
   def test_dispatches_tasks
@@ -168,13 +169,94 @@ class BoltTest < BasicTestCase
     end
   end
 
+  def test_persist_and_finished
+    H.announce
+
+    Bolt::Helpers.schedule :task => 'constant_a'
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+    # Task should be cleaned up
+    rows = @coll.find.to_a
+    assert_equal 0, rows.count, rows
+
+    Bolt::Helpers.schedule :task => 'constant_a', :persist => true
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+    # Task should not be cleaned up
+    rows = @coll.find.to_a
+    assert_equal 1, rows.count, rows
+    # It should be marked as finished
+    assert rows.first['finished'], rows
+  end
+
+  def test_silent
+    H.announce
+
+    # default, via email
+    Bolt::Helpers.schedule :task => 'constant_a'
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+    # there should be one mail
+    mails = Mail::TestMailer.deliveries
+    assert_equal 1, mails.count, mails
+
+    # silent, saved in the task
+    Mail::TestMailer.deliveries.clear
+    Bolt::Helpers.schedule :task => 'constant_a', :silent => true, :persist => true
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+    # there should be no mails
+    mails = Mail::TestMailer.deliveries
+    assert_equal 0, mails.count, mails
+    # notifications should be in the task
+    rows = @coll.find.to_a
+    assert_equal 1, rows.count, rows
+    assert rows.first['notifications'], rows
+
+    # silent and failing, saved in the task, as the task is persisting
+    @coll.remove
+    Bolt::Helpers.schedule :task => 'invalid', :silent => true, :persist => true
+    H::Log.swallow! 1
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+    # there should be no mails
+    mails = Mail::TestMailer.deliveries
+    assert_equal 0, mails.count, mails
+    # notifications should be in the task
+    rows = @coll.find.to_a
+    assert_equal 1, rows.count, rows
+    assert rows.first['notifications'], rows
+
+    # silent and failing, via email, as the task is not persisting
+    Bolt::Helpers.schedule :task => 'invalid', :silent => true, :persist => false
+    H::Log.swallow! 1
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+    # there should be some error mail
+    mails = Mail::TestMailer.deliveries
+    assert_equal 1, mails.count, mails
+    assert mails.first.subject =~ /Bolt could not run/, mails
+  end
+
   def test_composite
     H.announce
 
     # run composite task
-    Bolt::Helpers.schedule :task => 'composite'
-    Bolt.dispatch_loop @opts.merge(:tasks_count => 1, :rounds => 3)
+    Bolt::Helpers.schedule :task => 'composite', :timeout => 5
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1, :rounds => 3, :tasks_wait => 2 )
+    mails = Mail::TestMailer.deliveries
+    assert_equal 1, mails.count, mails
+    assert mails.first.body.to_s.include?('fine from heyA'), mails.first.body.to_s
+    assert mails.first.body.to_s.include?('fine from heyB'), mails.first.body.to_s
+    # Tasks should be cleaned up
+    rows = @coll.find.to_a
+    assert_equal 0, rows.count, rows
 
-
+    # now failing on subtasks
+    Mail::TestMailer.deliveries.clear
+    Bolt::Helpers.schedule :task => 'composite', :fail => true, :timeout => 5
+    H::Log.swallow! 2
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1, :rounds => 3, :tasks_wait => 2)
+    mails = Mail::TestMailer.deliveries
+    assert_equal 1, mails.count, mails
+    assert mails.first.body.to_s.include?('failing from heyA'), mails.first.body.to_s
+    assert mails.first.body.to_s.include?('failing from heyB'), mails.first.body.to_s
+    # Tasks should be cleaned up
+    rows = @coll.find.to_a
+    assert_equal 0, rows.count, rows
   end
 end

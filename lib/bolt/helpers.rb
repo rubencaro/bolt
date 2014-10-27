@@ -43,14 +43,20 @@ module Bolt
     def self.wait_for(id, opts = {})
       timeout = opts[:timeout] || 300
       step = opts[:step] || 5
-      taskA = nil
       coll = get_mongo_collection
+      task = coll.find_one '_id' => id
+      H.log "Waiting for #{task}..."
       H.wait_for :timeout => timeout, :step => step do
-        taskA = coll.find_one '_id' => id
-        taskA['finished']  # true when done
+        task = coll.find_one '_id' => id
+        if task then
+          task['finished']  # true when done
+        else
+          false
+        end
       end
-      taskA
-    rescue Exception
+      task
+    rescue Exception => ex
+      H.log_ex ex
       nil
     end
 
@@ -59,6 +65,41 @@ module Bolt
     def self.remove(id)
       coll = get_mongo_collection
       coll.remove( '_id' => id )
+    end
+
+    # Perform suited notification for this task
+    #
+    def self.notify(opts)
+      t = opts[:task]
+
+      # notify via email when not silent, or when failing and not persisting
+      if not t['silent'] or
+          (not t['success'] and not t['persist']) then
+        return notify_via_email opts
+      end
+
+      # save notifications in the task
+      t['notifications'] = notify_via_hash opts
+      coll = get_mongo_collection
+
+      # save the task with everything it has collected until now
+      coll.update({'_id' => t['_id']}, t)
+    end
+
+    # Perform email notification for this task
+    #
+    def self.notify_via_email(opts)
+      if opts[:task]['success'] then
+        Bolt::Email.success opts
+      else
+        Bolt::Email.failure opts
+      end
+    end
+
+    # Get a hash with notification data for this task
+    #
+    def self.notify_via_hash(opts)
+      {}  # nothing to say, by now
     end
 
   end

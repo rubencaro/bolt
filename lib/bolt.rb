@@ -61,12 +61,13 @@ module Bolt
   #
   # If you pass a `tasks_count` Bolt will run only that many tasks. Also it will
   # raise NotExpectedNumberOfTasks if there are less than `tasks_count` runnable
-  # tasks on queue. After running `tasks_count` tasks, it will exit.
-  # Default is -1 (disabled).
+  # tasks on queue in less than `tasks_wait` seconds. After running
+  # `tasks_count` tasks, it will exit. Default is -1 (disabled).
   #
-  # If you pass a `rounds` then it will perform that number of rounds processing
-  # `tasks_count` tasks on each loop. Default is 1. No sleep is done
-  # between rounds.
+  # If you pass a `rounds` then it will perform that number of rounds starting
+  # `tasks_count` tasks on each loop. Default is 1. `round_sleep` sleep is done
+  # between rounds. It will wait for tasks to end only after dispatching all
+  # rounds.
   #
   # If you pass a `throttle` then it will try not to have more than `throttle`
   # alive tasks at any given time. Default is 5.
@@ -74,7 +75,9 @@ module Bolt
   def self.dispatch_loop(db: @@db,
                          queue: @@queue,
                          tasks_count: -1,
+                         tasks_wait: 2,
                          rounds: 1,
+                         round_sleep: 0.01,
                          tasks_folder: 'bolt/tasks',
                          piper_timeout: 5,
                          throttle: @@throttle)
@@ -117,21 +120,21 @@ module Bolt
       loop do
         # perform gets inside a timeout, break if times out
         ended_task = JSON.parse(main_read.gets)
+        ended_task['_id'] = BSON::ObjectId.from_string ended_task['_id']['$oid']
 
         # save task if asked, all metadata is there
         Bolt::Helpers.tasks << ended_task if Bolt::Helpers.tasks
 
-        if ended_task['success'] then
-          Bolt::Email.success :task => ended_task
+        Bolt::Helpers.notify :task => ended_task
+
+        # remove only if not asked to persist
+        if ended_task['persist'] then
+          piper_coll.update({'_id' => ended_task['_id']}, ended_task )
         else
-          Bolt::Email.failure :task => ended_task
+          # BSON::ObjectId through JSON gets into ['$oid']
+          piper_coll.remove '_id' => ended_task['_id']
         end
 
-        # by now, only clean the queue
-
-        # BSON::ObjectId through JSON gets into ['$oid']
-        removed = piper_coll.remove(
-                        '_id' => BSON::ObjectId(ended_task['_id']['$oid']) )
         i += 1
         break if tasks_count > 0 and
                   ( i >= total_tasks_count or
@@ -147,16 +150,20 @@ module Bolt
                      :main_write => main_write,
                      :recycled_tasks => recycled_tasks,
                      :tasks_count => tasks_count,
-                     :tasks_folder => tasks_folder
+                     :tasks_folder => tasks_folder,
+                     :timeline => Time.now + tasks_wait
 
       recycled_tasks = [] # clean recycled_tasks
 
       r += 1
-      if tasks_count > 0 then # wait and end
-        pids.each{|pid| H.spit("Waiting for pid:#{pid}") and Process.wait pid}
-        piper.join
-        break if r >= rounds # out of the loop
-        next # next in the loop
+      if tasks_count > 0 then
+        if r >= rounds then # wait and end
+          pids.each{|pid| Process.wait pid}
+          piper.join
+          break # out of the loop
+        end
+        sleep round_sleep
+        next # next round
       end
 
       # infinite loop
@@ -176,9 +183,7 @@ module Bolt
     main_write.close if main_write
   end
 
-  def self.dispatch_tasks(opts)
-    defaults = {}
-    opts = defaults.merge(opts)
+  def self.get_tasks(opts)
 
     # limiting the number of tasks using configured throttle
     slice = Bolt.throttle - opts[:pids].count - opts[:recycled_tasks].count
@@ -196,10 +201,30 @@ module Bolt
     # add recycled_tasks to task list
     tasks += opts[:recycled_tasks]
 
+    tasks
+  end
+
+  def self.dispatch_tasks(opts)
+    defaults = {}
+    opts = defaults.merge(opts)
+
+    tasks = get_tasks opts
+
     if opts[:tasks_count] > 0 then
+
+      # wait for all expected tasks to be ready to start
+      H.log "Waiting for tasks to be ready..."
+      while tasks.count < opts[:tasks_count] and Time.now <= opts[:timeline]
+        sleep 0.1
+        tasks = get_tasks opts
+      end
+
       tasks = tasks[0..opts[:tasks_count]-1] # take only tasks_count
+
       if tasks.count < opts[:tasks_count] then # exactly that number
-        raise Bolt::NotExpectedNumberOfTasks.new("Not enough tasks on the queue. There should be #{opts[:tasks_count]}. There are #{tasks.count}.")
+        raise Bolt::NotExpectedNumberOfTasks.new("Not enough tasks on the queue."+
+                                                " There should be #{opts[:tasks_count]}."+
+                                                " There are #{tasks.count}.")
       end
     end
 
@@ -210,6 +235,7 @@ module Bolt
         default_timeout = 300.0
         default_timeout = 2.0 if CURRENT_ENV == 'test'
         task['timeout'] ||= default_timeout
+        task['dispatched'] = true # in case someone writes the entire doc
         Timeout.timeout( task['timeout'].to_f ) do
           begin
 
@@ -222,24 +248,25 @@ module Bolt
             task['_id'] = BSON::ObjectId.from_string task['_id']['$oid']
             Bolt::Tasks.const_get(task['task'].camelize).run :task => task
 
-            task[:success] = true
+            task['success'] = true
 
             H.log "Bolt wins the race for '#{task['task']}'!"
           rescue Exception => ex
             H.log_ex ex, :msg => "False start for '#{task['task']}'"
-            task[:success] = false
-            task[:ex] = ex
-            task[:backtrace] = ex.backtrace
+            task['success'] = false
+            task['ex'] = ex
+            task['backtrace'] = ex.backtrace
           end
         end
 
       rescue Timeout::Error => ex # only timeout errors, right?
         H.log_ex ex, :msg => "Too slow for Bolt '#{task['task']}'"
-        task[:success] = false
-        task[:ex] = ex
-        task[:backtrace] = ex.backtrace
-        Bolt::Email.failure :task => task, :ex => ex
+        task['success'] = false
+        task['ex'] = ex
+        task['backtrace'] = ex.backtrace
+        Bolt::Helpers.notify :task => task
       ensure
+        task['finished'] = true
         task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
         opts[:main_write].puts task.to_json
         exit! true # avoid fire at_exit hooks inherited from parent!

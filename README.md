@@ -24,8 +24,8 @@ Inside `bolt/tasks/my_example_task.rb` things look like this:
       module Tasks
         module MyExampleTask
 
-          def self.run(task:)
-            do_something_with task
+          def self.run(args)
+            do_something_with args[:task]
           end
 
         end
@@ -75,7 +75,8 @@ be started by Bolt until it's in the past.
 * `persist`: boolean, don't remove the task after it's done
 * `finished`: boolean, whether Bolt ended processing that task (only makes sense
 if `persist`...).
-* `silent`: don't send notifications, save data in the task for further process
+* `silent`: don't send email notifications, save data in the task for further
+process, unless the task fails and `persist` is `false`.
 * `expire`: remove from db when this Date arrives. If it's not there, doc is not
 removed.
 
@@ -292,8 +293,10 @@ Take a look at the code for more details...
 ### 0.3.0
 
 * Add throttle
-* Add more helpers
+* Add silent
+* Add persist
 * Add composite tasks
+* Add more helpers
 
 ### 0.2.0
 
