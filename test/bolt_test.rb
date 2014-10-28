@@ -155,6 +155,8 @@ class BoltTest < BasicTestCase
   def test_throttle
     H.announce
 
+    prev = Bolt.throttle
+
     Bolt::Helpers.save_tasks!
 
     # enqueue several tasks
@@ -167,6 +169,8 @@ class BoltTest < BasicTestCase
     assert_raises Bolt::NotExpectedNumberOfTasks do
       Bolt.dispatch_loop @opts.merge(:tasks_count => 3, :throttle => 2)
     end
+
+    Bolt.throttle = prev
   end
 
   def test_persist_and_finished
@@ -236,8 +240,8 @@ class BoltTest < BasicTestCase
     H.announce
 
     # run composite task
-    Bolt::Helpers.schedule :task => 'composite', :timeout => 5
-    Bolt.dispatch_loop @opts.merge(:tasks_count => 1, :rounds => 3, :tasks_wait => 2 )
+    Bolt::Helpers.schedule :task => 'composite'
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1, :rounds => 3, :tasks_wait => 0.5)
     mails = Mail::TestMailer.deliveries
     assert_equal 1, mails.count, mails
     assert mails.first.body.to_s.include?('fine from heyA'), mails.first.body.to_s
@@ -248,9 +252,9 @@ class BoltTest < BasicTestCase
 
     # now failing on subtasks
     Mail::TestMailer.deliveries.clear
-    Bolt::Helpers.schedule :task => 'composite', :fail => true, :timeout => 5
+    Bolt::Helpers.schedule :task => 'composite', :fail => true
     H::Log.swallow! 2
-    Bolt.dispatch_loop @opts.merge(:tasks_count => 1, :rounds => 3, :tasks_wait => 2)
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1, :rounds => 3, :tasks_wait => 0.5)
     mails = Mail::TestMailer.deliveries
     assert_equal 1, mails.count, mails
     assert mails.first.body.to_s.include?('failing from heyA'), mails.first.body.to_s

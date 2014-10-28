@@ -51,6 +51,7 @@ module Bolt
   def self.db; @@db; end
   def self.queue; @@queue; end
   def self.throttle; @@throttle; end
+  def self.throttle=(value); @@throttle = value; end
 
   module Tasks # placeholder
   end
@@ -75,7 +76,7 @@ module Bolt
   def self.dispatch_loop(db: @@db,
                          queue: @@queue,
                          tasks_count: -1,
-                         tasks_wait: 2,
+                         tasks_wait: 0,
                          rounds: 1,
                          round_sleep: 0.01,
                          tasks_folder: 'bolt/tasks',
@@ -131,6 +132,7 @@ module Bolt
         if ended_task['persist'] then
           piper_coll.update({'_id' => ended_task['_id']}, ended_task )
         else
+          H.log "Removing #{ended_task}"
           # BSON::ObjectId through JSON gets into ['$oid']
           piper_coll.remove '_id' => ended_task['_id']
         end
@@ -163,6 +165,7 @@ module Bolt
           break # out of the loop
         end
         sleep round_sleep
+        H.log "Going for the next round !"
         next # next round
       end
 
@@ -211,7 +214,6 @@ module Bolt
     tasks = get_tasks opts
 
     if opts[:tasks_count] > 0 then
-
       # wait for all expected tasks to be ready to start
       H.log "Waiting for tasks to be ready..."
       while tasks.count < opts[:tasks_count] and Time.now <= opts[:timeline]
