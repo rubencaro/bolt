@@ -73,11 +73,11 @@ The only mandatory.
 `tech+bolt at elpulgardelpanda.com`.
 * `run_at`: timestamp for the start of the task. When it exists, task will not
 be started by Bolt until it's in the past.
-* `persist`: boolean, don't remove the task after it's done
+* `persist`: boolean, don't remove the task after it's done, save it instead
 * `finished`: boolean, whether Bolt ended processing that task (only makes sense
 if `persist`...).
-* `silent`: don't send email notifications, save data in the task for further
-process, unless the task fails and `persist` is `false`.
+* `silent`: don't send email notifications unless the task fails and `persist`
+is `false`.
 * `expire`: remove from db when this Date arrives. If it's not there, doc is not
 removed.
 
@@ -157,6 +157,54 @@ could do this:
     coll.insert task_data # it's mongo, just do it!
 ```
 
+
+## Persistence
+
+If `persist` is set, then everything put in the task will persist along with it.
+The task code itself is responsible for saving any data on the task instance
+before control is passed back to Bolt. Just like:
+
+```ruby
+    module Bolt::Tasks
+      module Subtask
+        def self.run(args)
+          do_something_with args[:task]
+
+          # save results somewhere in the task, it's a mongo doc!
+          args[:task]['results'] = { :everything => "fine from subtask" }
+        end
+      end
+    end
+```
+
+Of course, it can also perform writes to db at any time. That can be useful
+sometimes to save the state and be able to recover afterwards from a system
+failure. Such as:
+
+```ruby
+    module Bolt::Tasks
+      module Mytask
+        def self.run(args)
+          # get access to db
+          coll = Bolt::Helpers.get_mongo_collection
+
+          t = args[:task]
+
+          # recover previous state, or start with 10
+          rounds = 10 - t['already_done'].to_i
+
+          rounds.times do |round|
+            do_something_with t, round
+            # save state
+            coll.update({'_id' => t['_id']},
+                        { '$set' => {'already_done' => round + 1} })
+          end
+        end
+      end
+    end
+```
+
+
 ## Notifications
 
 Bolt will send an email to the address put in the `email` field in the task when
@@ -190,23 +238,6 @@ If you set the `silent` option in the task, then:
 * No email will be sent on success.
 * No email will be sent on failure if `persist` is also set to `true`.
 * Email will be sent on failure when `persist` is not `true`.
-
-The task code itself is responsible for saving any data on the task row in db
-before it ends. If `persist` is set, then it will persist along with the task.
-Just like:
-
-```ruby
-    module Bolt::Tasks
-      module Subtask
-        def self.run(args)
-          do_something_with args[:task]
-
-          # save results somewhere in the task, it's a mongo doc!
-          args[:task]['results'] = { :everything => "fine from subtask" }
-        end
-      end
-    end
-```
 
 
 ## Composite tasks
