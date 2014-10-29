@@ -2,6 +2,7 @@
 
 He is a fast runner.
 
+
 ## What
 
 Reads tasks from a mongo table called `task_queue` on a db called
@@ -83,6 +84,7 @@ removed.
 You are free to add as many fields as mongo can support. They will be passed
 along to your task.
 
+
 ## Use
 
 Add it to your `Gemfile`, and add `stones` too:
@@ -111,6 +113,7 @@ ensure Bolt is always up. Such as:
 `bolt_setup` will also create a `config/bolt.rb` file that will be loaded by
 Bolt once when it starts. There you want to put your initialization code for
 `stones`, for example.
+
 
 ## Running
 
@@ -154,6 +157,57 @@ could do this:
     coll.insert task_data # it's mongo, just do it!
 ```
 
+## Notifications
+
+Bolt will send an email to the address put in the `email` field in the task when
+the task ends. There are two main email templates, one for success, one for
+failure. You can override their subject or their body by setting some options
+in the task. Bolt will lok for those options and will use them if they are
+found.
+
+```ruby
+    module Bolt
+      module Tasks
+        module MyExampleTask
+
+          def self.run(args)
+            do_something_with args[:task]
+
+            # setup notification emails
+            args[:task].set! 'opts','email','success','subject','My success subject'
+            args[:task].set! 'opts','email','success','body','My success body'
+            args[:task].set! 'opts','email','failure','subject','My failure subject'
+            args[:task].set! 'opts','email','failure','body','My failure body'
+          end
+
+        end
+      end
+    end
+```
+
+If you set the `silent` option in the task, then:
+
+* No email will be sent on success.
+* No email will be sent on failure if `persist` is also set to `true`.
+* Email will be sent on failure when `persist` is not `true`.
+
+The task code itself is responsible for saving any data on the task row in db
+before it ends. If `persist` is set, then it will persist along with the task.
+Just like:
+
+```ruby
+    module Bolt::Tasks
+      module Subtask
+        def self.run(args)
+          do_something_with args[:task]
+
+          # save results somewhere in the task, it's a mongo doc!
+          args[:task]['results'] = { :everything => "fine from subtask" }
+        end
+      end
+    end
+```
+
 
 ## Composite tasks
 
@@ -178,7 +232,7 @@ The mongo document itself can be used to persist the task outcome. Like this:
 
           raise "Oh no!" if not taskA      # task did not finish on time
 
-          do_something_with taskA['my_saved_results']   # or wherever the A task saved them
+          do_something_with taskA['results']   # or wherever the A task saved them
 
           # go on with B ...
 
@@ -196,6 +250,7 @@ them if you don't want to interfere with it's expected process.
 
 `wait_for` return `nil` if the task is not finished on time. Your task should
 handle the situation when it comes.
+
 
 ## Interrupting and recycling tasks
 
