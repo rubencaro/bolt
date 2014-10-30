@@ -54,10 +54,10 @@ module Bolt
           false
         end
       end
-      task
+      { :valid => true, :task => task }
     rescue Exception => ex
       H.log_ex ex
-      nil
+      { :valid => false, :ex => ex }
     end
 
     # Remove given task's ID from the queue.

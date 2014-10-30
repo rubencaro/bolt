@@ -259,11 +259,11 @@ The mongo document itself can be used to persist the task outcome. Like this:
           idB = bh.schedule_subtask :task => 'my_taskB', :more => 'data'
 
           # wait for A
-          taskA = bh.wait_for idA
+          res = bh.wait_for idA
 
-          raise "Oh no!" if not taskA      # task did not finish on time
+          raise "Oh no! #{res[:ex]}" if not res[:valid]  # task did not finish on time
 
-          do_something_with taskA['results']   # or wherever the A task saved them
+          do_something_with res[:task]['results']   # or wherever the A task saved them
 
           # go on with B ...
 
@@ -279,8 +279,8 @@ The mongo document itself can be used to persist the task outcome. Like this:
 suitable for subtasks, such as `persist`, `expire` and `silent`. Do not override
 them if you don't want to interfere with it's expected process.
 
-`wait_for` return `nil` if the task is not finished on time. Your task should
-handle the situation when it comes.
+`wait_for` returns `{ :valid => false, :ex => <exception>}` if the task is not
+finished on time. Your task should handle the situation when it comes.
 
 
 ## Interrupting and recycling tasks

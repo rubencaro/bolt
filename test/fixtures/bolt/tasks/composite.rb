@@ -14,8 +14,8 @@ module Bolt::Tasks
                                 :fail => args[:task]['fail']
 
       # wait for tasks
-      taskA = bh.wait_for idA, :step => 0.01
-      taskB = bh.wait_for idB, :step => 0.01
+      taskA = bh.wait_for(idA, :step => 0.01)[:task]
+      taskB = bh.wait_for(idB, :step => 0.01)[:task]
 
       # put results on the success email
       res = ''
