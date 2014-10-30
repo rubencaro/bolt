@@ -316,21 +316,23 @@ to test your tasks like this:
 
     class YourTaskTest < BasicTestCase
 
-      def test_it_goes_on_inside_bolt
-        coll = Bolt::Helpers.get_mongo_collection  # will be the testing one
-        coll.remove # clear the queue
+      def setup
+        @coll = Bolt::Helpers.get_mongo_collection  # will be the testing one
+        @coll.remove # clear the queue
         Mail::TestMailer.deliveries.clear
         Bolt::Helpers.save_tasks! # to save task documents with their test_metadata
+      end
 
+      def test_it_goes_on_inside_bolt
         # add the task to the queue
-        coll.insert :task => 'your_task', :anything => 'else'
+        Bolt::Helpers.schedule :task => 'your_task', :anything => 'else'
 
         # call dispatch_loop, processing only one task and leave
         Bolt.dispatch_loop :tasks_count => 1
 
         # check anything you expected
         assert_equal 1, Mail::TestMailer.deliveries.count # it sent an email
-        assert coll.find().to_a.none? # queue is clean
+        assert @coll.find().to_a.none? # queue is clean
         tasks = Bolt::Helpers.tasks # saved tasks
         assert_equal 1, tasks.count, tasks
         md = tasks.first['test_metadata'] # gathered test_metadata
@@ -348,6 +350,19 @@ task is then passed through the pipe and saved for you on `Bolt::Helpers.tasks`
 in the master process. Luckily that's the process you're running the test from.
 To activate the mechanism you should be on the `test` environment and run
 `Bolt::Helpers.save_tasks!`.
+
+To test a composite task you should play with `dispatch_loop`'s parameters.
+Like this:
+
+```ruby
+    Bolt.dispatch_loop :tasks_count => 1, :rounds => 3, :tasks_wait => 0.5
+```
+
+That will wait at most 0.5 seconds (`tasks_wait`) until it sees 1 task available
+(`tasks_count`) to run. Then it will start running it, and then wait again at
+most `tasks_wait` seconds for `tasks_count` tasks to be available for run.
+Bolt will repeat that 3 times (`rounds`). After that it will wait until every
+task is finished. This example is suitable for a task that schedules 2 subtasks.
 
 
 ## TODOs
