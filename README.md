@@ -297,6 +297,36 @@ or to be rerun without harm.
 Just try to write functional code and everything will flow.
 
 
+## Run in development
+
+To run Bolt in a development environment you just need to open a interactive
+Ruby session and `require 'bolt'` and any other libraries you may need from your
+project. Just like:
+
+```
+    $ pry -Ilib
+    [1] pry(main)> require 'bolt'
+    => true
+    [2] pry(main)> Bolt.dispatch_loop tasks_count: 1, rounds: 3, tasks_wait: 0.5
+
+    (...Bolt running stdout...)
+
+    [3] pry(main)>
+```
+
+Control your mongo queue from mongo client:
+
+```
+    $ mongo
+    MongoDB shell version: 2.6.5
+    connecting to: test
+    > use bolt_development
+    switched to db bolt_development
+    > db.task_queue.find();
+    >
+```
+
+
 ## Testing tasks
 
 If your task interacts with Bolt you may want to test it together with Bolt. As
