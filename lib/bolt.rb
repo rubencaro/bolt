@@ -282,7 +282,7 @@ module Bolt
     tids = tasks.map{|t| t['_id']}
     opts[:coll].update({'_id' => { '$in' => tids }},
                        { '$set' => {'dispatched' => true} },
-                       { 'multi' => true })
+                       { :multi => true })
 
     # clean not-alive threads
     opts[:pids].reject!{|pid| not H.is_alive?(pid)}

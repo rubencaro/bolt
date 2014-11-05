@@ -402,6 +402,7 @@ task is finished. This example is suitable for a task that schedules 2 subtasks.
 * Add periodic task support.
 * Support non interruptible tasks.
 * Document standalone deploy.
+* Restart when > 200 zombies.
 
 
 ## Read the code
