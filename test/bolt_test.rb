@@ -263,4 +263,29 @@ class BoltTest < BasicTestCase
     rows = @coll.find.to_a
     assert_equal 0, rows.count, rows
   end
+
+  def test_gets_recycled_tasks
+    H.announce
+
+    # schedule several tasks and only process the ones that should be recycled
+
+    # regular, non dispatched
+    Bolt::Helpers.schedule :task => 'constant_a'
+
+    # already dispatched, should be recycled
+    Bolt::Helpers.schedule :task => 'constant_a', :dispatched => true
+
+    # dispatched but also finished, should not be recycled
+    Bolt::Helpers.schedule :task => 'constant_a', :dispatched => true,
+        :finished => true
+
+    # takes recycled and new tasks
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 2)
+
+    # no new tasks, and nothing left to recycle
+    H::Log.swallow! 1
+    assert_raises Bolt::NotExpectedNumberOfTasks do
+      Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+    end
+  end
 end

@@ -108,7 +108,10 @@ module Bolt
     H.exec "touch ~/flagella/bolt/pids/#{Process.pid}"
 
     # load recycled_tasks
-    recycled_tasks = coll.find({ 'dispatched' => { '$exists' => true } }).to_a
+    recycled_tasks = coll.find({ '$and' => [
+                                  {'dispatched' => { '$exists' => true }},
+                                  {'finished' => { '$exists' => false }}
+                                ] }).to_a
 
     # main pipe to communicate with children
     main_read, main_write = IO.pipe

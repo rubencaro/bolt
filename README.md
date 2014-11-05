@@ -426,6 +426,8 @@ Take a look at the code for more details...
 
 * Add anti-zombie protection
 * Better wait_for
+* Fix some bugs
+* Add some testing
 
 ### 0.3.0
 
