@@ -421,6 +421,11 @@ Take a look at the code for more details...
 
 ## Changelog
 
+### 0.3.1
+
+* Add anti-zombie protection
+* Better wait_for
+
 ### 0.3.0
 
 * Add throttle

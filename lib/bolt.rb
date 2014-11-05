@@ -284,8 +284,8 @@ module Bolt
                        { '$set' => {'dispatched' => true} },
                        { 'multi' => true })
 
-    # clean already dead threads
-    opts[:pids].reject!{|pid| not File.exist?("/proc/#{pid}")}
+    # clean not-alive threads
+    opts[:pids].reject!{|pid| not H.is_alive?(pid)}
   end
 
 
