@@ -397,6 +397,7 @@ task is finished. This example is suitable for a task that schedules 2 subtasks.
 
 ## TODOs
 
+* Make public (Bolt's ready, waiting for [stones](https://github.com/epdp/stones))
 * Expose configurable things.
 * Reduce Bolt weight as much as possible.
 * Add periodic task support.
