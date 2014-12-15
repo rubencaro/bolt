@@ -400,7 +400,6 @@ task is finished. This example is suitable for a task that schedules 2 subtasks.
 * Make public (Bolt's ready, waiting for [stones](https://github.com/epdp/stones))
 * Expose configurable things.
 * Reduce Bolt weight as much as possible.
-* Add periodic task support.
 * Support non interruptible tasks.
 * Document standalone deploy.
 * Restart when > 200 zombies.
@@ -422,6 +421,10 @@ Take a look at the code for more details...
 
 
 ## Changelog
+
+### 0.4.0
+
+* Add periodic task support.
 
 ### 0.3.1
 
