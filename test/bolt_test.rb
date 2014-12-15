@@ -2,20 +2,8 @@
 require 'test_helper'
 require 'helpers/email'
 require 'bolt'
-require 'mongo'
 
 class BoltTest < BasicTestCase
-
-  def setup
-    # clean queue
-    db = 'bolt_test'
-    tasks_folder = 'test/fixtures/bolt/tasks'
-    @coll = Mongo::MongoClient.new.db(db)['task_queue']
-    @coll.db.eval 'db.dropDatabase()'
-    Mail::TestMailer.deliveries.clear
-    @opts = { :db => db, :tasks_folder => tasks_folder }
-    H::Log.swallow! 0
-  end
 
   def test_dispatches_tasks
     H.announce
@@ -70,7 +58,6 @@ class BoltTest < BasicTestCase
   def test_applies_task_timeout
     H.announce
     H::Log.swallow! 1
-    Mail::TestMailer.deliveries.clear
 
     Bolt::Helpers.schedule :task => 'timeout', :timeout => 0.01
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)

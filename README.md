@@ -283,6 +283,21 @@ them if you don't want to interfere with it's expected process.
 finished on time. Your task should handle the situation when it comes.
 
 
+## Periodic tasks
+
+You can create tasks that run periodically by adding a `period` field with a
+numeric value, and specifying the `run_at` timestamp. You can also add a
+`period_type` field indicating the meaning of the numeric `period`. It can be:
+
+* `seconds`: (default) a fixed period of given amount of seconds
+* `every_given_hour`: will run everyday at this hour
+* `every_given_day`: will run every month at this day
+
+When run, a periodic task will simply schedule a regular task with its data,
+and update its own `run_at` to match what's indicated by the `period`. Then the
+regular task gets run in Bolt's next loop.
+
+
 ## Interrupting and recycling tasks
 
 You should design your tasks (any software!) to be fault-tolerant. They can be
