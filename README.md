@@ -285,13 +285,12 @@ finished on time. Your task should handle the situation when it comes.
 
 ## Periodic tasks
 
-You can create tasks that run periodically by adding a `period` field with a
-numeric value, and specifying the `run_at` timestamp. You can also add a
-`period_type` field indicating the meaning of the numeric `period`. It can be:
+You can create tasks that run periodically by specifying the `run_at` timestamp
+and adding a `period` field with a one of:
 
-* `seconds`: (default) a fixed period of given amount of seconds
-* `every_given_hour`: will run everyday at this hour
-* `every_given_day`: will run every month at this day
+* a numeric value: a fixed period of given amount of seconds
+* `every_given_hour`: will run everyday at `run_at`'s time.
+* `every_given_day`: will run every month at `run_at`'s day and time.
 
 When run, a periodic task will simply schedule a regular task with its data,
 and update its own `run_at` to match what's indicated by the `period`. Then the

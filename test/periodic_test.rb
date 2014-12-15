@@ -25,7 +25,7 @@ class PeriodicTest < BasicTestCase
     H.announce
 
     # create periodic task and run it
-    t ={ :task => 'constant_a', :period => 7, :period_type => 'every_given_hour',
+    t ={ :task => 'constant_a', :period => 'every_given_hour',
          :run_at => Time.now.to_i - 1,
          :more => 'things' }
     next_run_at = (Time.at(t[:run_at]).to_datetime + 1).to_time.to_i
@@ -41,7 +41,7 @@ class PeriodicTest < BasicTestCase
     H.announce
 
     # create periodic task and run it
-    t ={ :task => 'constant_a', :period => 7, :period_type => 'every_given_day',
+    t ={ :task => 'constant_a', :period => 'every_given_day',
          :run_at => Time.now.to_i - 1,
          :more => 'things' }
     next_run_at = (Time.at(t[:run_at]).to_datetime >> 1).to_time.to_i

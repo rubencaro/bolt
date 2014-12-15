@@ -57,6 +57,7 @@ module Bolt
   end
 
   class NotExpectedNumberOfTasks < StandardError; end
+  class PeriodZero < StandardError; end
 
   # Wait for tasks on queue and dispatch them to processes
   #
@@ -132,7 +133,7 @@ module Bolt
         Bolt::Helpers.notify :task => ended_task
 
         # remove only if not asked to persist
-        if ended_task['persist'] then
+        if ended_task['persist'] or ended_task['period'] then
           piper_coll.update({'_id' => ended_task['_id']}, ended_task )
         else
           H.log "Removing #{ended_task}"
@@ -234,47 +235,10 @@ module Bolt
     end
 
     new_pids = H.dispatch_in_processes(tasks) do |task|
-      begin
-        H.log "Starting race for '#{task['task']}'... On your marks, ready, go!"
-
-        default_timeout = 300.0
-        default_timeout = 2.0 if CURRENT_ENV == 'test'
-        task['timeout'] ||= default_timeout
-        task['dispatched'] = true # in case someone writes the entire doc
-        Timeout.timeout( task['timeout'].to_f ) do
-          begin
-
-            # the task must be a ruby script in `bolt/tasks/#{task['task']}`
-            # it must define a global `run` method that will receive the task
-            # hash as argument
-
-            require "#{opts[:tasks_folder]}/#{task['task']}"
-            # run is defined in the task file
-            task['_id'] = BSON::ObjectId.from_string task['_id']['$oid']
-            Bolt::Tasks.const_get(task['task'].camelize).run :task => task
-
-            task['success'] = true
-
-            H.log "Bolt wins the race for '#{task['task']}'!"
-          rescue Exception => ex
-            H.log_ex ex, :msg => "False start for '#{task['task']}'"
-            task['success'] = false
-            task['ex'] = ex
-            task['backtrace'] = ex.backtrace
-          end
-        end
-
-      rescue Timeout::Error => ex # only timeout errors, right?
-        H.log_ex ex, :msg => "Too slow for Bolt '#{task['task']}'"
-        task['success'] = false
-        task['ex'] = ex
-        task['backtrace'] = ex.backtrace
-        Bolt::Helpers.notify :task => task
-      ensure
-        task['finished'] = true
-        task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
-        opts[:main_write].puts task.to_json
-        exit! true # avoid fire at_exit hooks inherited from parent!
+      if task['period'] then
+        dispatch_periodic_task task, opts
+      else
+        dispatch_regular_task task, opts
       end
     end
 
@@ -291,7 +255,119 @@ module Bolt
     opts[:pids].reject!{|pid| not H.is_alive?(pid)}
   end
 
+  def self.dispatch_regular_task(task, opts)
+    begin
+      H.log "Starting race for '#{task['task']}'... On your marks, ready, go!"
 
+      default_timeout = 300.0
+      default_timeout = 2.0 if CURRENT_ENV == 'test'
+      task['timeout'] ||= default_timeout
+      task['dispatched'] = true # in case someone writes the entire doc
+      Timeout.timeout( task['timeout'].to_f ) do
+        begin
+          task['_id'] = BSON::ObjectId.from_string task['_id']['$oid']
+
+          # the task must be a ruby script in `bolt/tasks/#{task['task']}`
+          # it must define a global `run` method that will receive the task
+          # hash as argument
+
+          require "#{opts[:tasks_folder]}/#{task['task']}"
+          # run is defined in the task file
+          Bolt::Tasks.const_get(task['task'].camelize).run :task => task
+
+          task['success'] = true
+
+          H.log "Bolt wins the race for '#{task['task']}'!"
+        rescue Exception => ex
+          H.log_ex ex, :msg => "False start for '#{task['task']}'"
+          task['success'] = false
+          task['ex'] = ex
+          task['backtrace'] = ex.backtrace
+        end
+      end
+
+    rescue Timeout::Error => ex # only timeout errors, right?
+      H.log_ex ex, :msg => "Too slow for Bolt '#{task['task']}'"
+      task['success'] = false
+      task['ex'] = ex
+      task['backtrace'] = ex.backtrace
+      Bolt::Helpers.notify :task => task
+    ensure
+      task['finished'] = true
+      task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
+      opts[:main_write].puts task.to_json
+      exit! true # avoid fire at_exit hooks inherited from parent!
+    end
+  end
+
+
+  def self.dispatch_periodic_task(task, opts)
+    begin
+      H.log "Processing periodic task '#{task['task']}'..."+
+          " Placing it in season calendar."
+
+      default_timeout = 300.0
+      default_timeout = 2.0 if CURRENT_ENV == 'test'
+      task['timeout'] ||= default_timeout
+      Timeout.timeout( task['timeout'].to_f ) do
+        begin
+          task['_id'] = BSON::ObjectId.from_string task['_id']['$oid']
+
+          # a periodic task simply schedules a regular task using its data
+          unwanted = ['_id','period','dispatched']
+          regular = task.reject{|k,v| unwanted.include?(k)}
+          Bolt::Helpers.schedule regular
+
+          # and updates its own `run_at` using its `period` and `period_type`
+          apply_period(task)
+
+          task['success'] = true
+
+          H.log "Periodic '#{task['task']}(#{task['period']})'"+
+              " got its place in season calendar."
+        rescue Exception => ex
+          H.log_ex ex, :msg => "False start for periodic '#{task['task']}'"
+          task['success'] = false
+          task['ex'] = ex
+          task['backtrace'] = ex.backtrace
+        end
+      end
+
+    rescue Timeout::Error => ex # only timeout errors, right?
+      H.log_ex ex, :msg => "Too slow for Bolt periodic '#{task['task']}'"
+      task['success'] = false
+      task['ex'] = ex
+      task['backtrace'] = ex.backtrace
+      Bolt::Helpers.notify :task => task
+    ensure
+      task['finished'] = false # periodic!
+      task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
+      opts[:main_write].puts task.to_json
+      exit! true # avoid fire at_exit hooks inherited from parent!
+    end
+  end
+
+  # Apply configured period to a given periodic task
+  #
+  # Raises `PeriodZero` if period.to_i is not applicable
+  # If `run_at` is not set, `Time.now` is used
+  #
+  def self.apply_period(task)
+
+    task['run_at'] ||= Time.now.to_i
+    dt = Time.at(task['run_at']).to_datetime
+
+    case task['period']
+    when 'every_given_hour' then
+      task['run_at'] = (dt + 1).to_time.to_i
+    when 'every_given_day' then
+      task['run_at'] = (dt >> 1).to_time.to_i
+    else # default seconds' type
+      period = task['period'].to_i
+      raise Bolt::PeriodZero if period <= 0
+      task['run_at'] += period
+    end
+  end
 
 end
 
