@@ -8,7 +8,7 @@ module Bolt
 
     def self.success(opts)
       opts[:task] ||= {}
-      to = opts[:task]['email'] || 'tech+bolt@elpulgardelpanda.com'
+      to = opts[:task]['email'] || 'tech+bolt@heeeeyaaaaa.com'
 
       subject = opts[:task].get?('opts','email','success','subject') ||
                 "Bolt nailed it! '#{opts[:task]['task'].to_s}'"
@@ -30,7 +30,7 @@ module Bolt
       opts[:task] ||= {}
       emails = []
       emails << opts[:task]['email'] if opts[:task]['email']
-      emails << 'tech+bolt@elpulgardelpanda.com'
+      emails << 'tech+bolt@heeeeyaaaaa.com'
       to = emails.join(',')
 
       ex = opts[:task].delete 'ex'

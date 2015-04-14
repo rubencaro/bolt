@@ -1,9 +1,9 @@
 # encoding: utf-8
 Gem::Specification.new do |s|
   s.name = "bolt"
-  s.version = "0.4.0" #  http://semver.org/  +  http://guides.rubygems.org/specification-reference
-  s.author = "elpulgardelpanda"
-  s.email = "tech@elpulgardelpanda.com"
+  s.version = "0.5.0" #  http://semver.org/  +  http://guides.rubygems.org/specification-reference
+  s.author = "rubencaro"
+  s.email = "ruben.caro.estevez@gmail.com"
   s.platform = Gem::Platform::RUBY
   s.summary = "A world-record-fast task runner based on Ruby processes"
 
@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'mongo', '~> 1.10.2'
   s.add_runtime_dependency 'bson_ext', '~> 1.10.2'
   s.add_runtime_dependency 'mail','~> 2.5.3'
-  # stones... but stones is on Gemfile while we need it from git
+  s.add_runtime_dependency 'json','~> 1.8.1'
 
   s.required_ruby_version = '>= 2.1.0'
   s.has_rdoc = false

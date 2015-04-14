@@ -58,6 +58,7 @@ class BoltTest < BasicTestCase
   def test_applies_task_timeout
     H.announce
     H::Log.swallow! 1
+    H::Email.count_calls!
 
     Bolt::Helpers.schedule :task => 'timeout', :timeout => 0.01
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
