@@ -314,6 +314,7 @@ That will wait at most 0.5 seconds (`tasks_wait`) until it sees 1 task available
 
 ## TODOs
 
+* Add to travis
 * Publish to rubygems
 * Expose configurable things.
 * Reduce Bolt weight as much as possible.
