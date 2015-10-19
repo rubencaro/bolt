@@ -295,7 +295,8 @@ module Bolt
     ensure
       task['finished'] = true
       task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
-      opts[:main_write].puts task.to_json
+      task = is_already_json?(task) ? task : task.to_json
+      opts[:main_write].puts task
       exit! true # avoid fire at_exit hooks inherited from parent!
     end
   end
@@ -342,7 +343,8 @@ module Bolt
     ensure
       task['finished'] = false # periodic!
       task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
-      opts[:main_write].puts task.to_json
+      task = is_already_json?(task) ? task : task.to_json
+      opts[:main_write].puts task
       exit! true # avoid fire at_exit hooks inherited from parent!
     end
   end
@@ -366,6 +368,19 @@ module Bolt
       period = task['period'].to_i
       raise Bolt::PeriodZero if period <= 0
       task['run_at'] += period
+    end
+  end
+
+  def self.is_already_json?(doc)
+    begin
+      JSON.parse(doc)
+      return true
+    rescue JSON::ParserError
+      return false
+    rescue TypeError
+      return false
+    rescue Exception
+      return false
     end
   end
 
