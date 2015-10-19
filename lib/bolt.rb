@@ -127,8 +127,6 @@ module Bolt
         g = main_read.gets
 #        ended_task = JSON.parse(main_read.gets)
         ended_task = JSON.parse(g)
-        H.spit g
-        H.spit(ended_task)
         ended_task['_id'] = BSON::ObjectId.from_string ended_task['_id']['$oid']
 
         # save task if asked, all metadata is there
@@ -299,7 +297,6 @@ module Bolt
     ensure
       task['finished'] = true
       task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
-      H.spit task.to_json
       opts[:main_write].puts task.to_json
       exit! true # avoid fire at_exit hooks inherited from parent!
     end
@@ -347,7 +344,6 @@ module Bolt
     ensure
       task['finished'] = false # periodic!
       task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
-      H.spit task.to_json
       opts[:main_write].puts task.to_json
       exit! true # avoid fire at_exit hooks inherited from parent!
     end
