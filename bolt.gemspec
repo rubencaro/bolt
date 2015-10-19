@@ -1,7 +1,7 @@
 # encoding: utf-8
 Gem::Specification.new do |s|
   s.name = "bolt"
-  s.version = "0.5.1" #  http://semver.org/  +  http://guides.rubygems.org/specification-reference
+  s.version = "0.5.2" #  http://semver.org/  +  http://guides.rubygems.org/specification-reference
   s.author = "rubencaro"
   s.email = "ruben.caro.estevez@gmail.com"
   s.platform = Gem::Platform::RUBY
