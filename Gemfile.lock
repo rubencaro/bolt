@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    bolt (0.5.0)
+    bolt (0.5.1)
       bson_ext (~> 1.10.2)
       json (~> 1.8.1)
       mail (~> 2.5.3)
