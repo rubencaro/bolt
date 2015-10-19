@@ -1,6 +1,6 @@
 
 require 'helpers/generic'
-require 'helpers/email'
+require_relative 'helpers/email'
 
 module Bolt
 

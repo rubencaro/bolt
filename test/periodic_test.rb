@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 require 'test_helper'
-require 'helpers/email'
+require 'bolt/helpers/email'
 require 'bolt'
 require 'mongo'
 

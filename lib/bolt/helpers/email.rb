@@ -1,8 +1,8 @@
 
 # mail config here to be shared wit everyone requiring this file
 require 'mail'
-require_relative 'config'
-require_relative 'log'
+require 'helpers/config'
+require 'helpers/log'
 
 # to be overriden in production
 #
