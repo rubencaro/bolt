@@ -26,33 +26,33 @@ require_relative 'log'
 #   Mail.defaults do
 #     delivery_method :test
 #   end
+module Bolt
+  module Helpers
+    module Email
 
-module Helpers
-  module Email
+      @@calls = nil
+      def self.count_calls!; @@calls = []; end
+      def self.nocount_calls!; @@calls = nil; end
+      def self.calls; @@calls; end
 
-    @@calls = nil
-    def self.count_calls!; @@calls = []; end
-    def self.nocount_calls!; @@calls = nil; end
-    def self.calls; @@calls; end
+      def email(options = {})
+        defaults = { :body => options[:subject].to_s }.merge(H.config[:email][:defaults])
+        options = defaults.merge(options)
+        m = Mail.new(options)
+        @@calls << m if not @@calls.nil?
+        m.deliver!
+      rescue => ex
+        H.log_ex ex
+        false
+      end
 
-    def email(options = {})
-      defaults = { :body => options[:subject].to_s }.merge(H.config[:email][:defaults])
-      options = defaults.merge(options)
-      m = Mail.new(options)
-      @@calls << m if not @@calls.nil?
-      m.deliver!
-    rescue => ex
-      H.log_ex ex
-      false
+      def self.clear
+        #Clear deliveries and calls. (to avoid trace overflow)
+        Mail::TestMailer.deliveries.clear
+        @@calls = []
+      end
+
     end
-
-    def self.clear
-      #Clear deliveries and calls. (to avoid trace overflow)
-      Mail::TestMailer.deliveries.clear
-      @@calls = []
-    end
-
+    extend Email
   end
-
-  extend Email
 end

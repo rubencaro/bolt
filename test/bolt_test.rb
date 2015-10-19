@@ -7,7 +7,7 @@ class BoltTest < BasicTestCase
 
   def test_dispatches_tasks
     H.announce
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     # run Bolt, it should raise that there are no tasks
     H::Log.swallow! 1
     assert_raises Bolt::NotExpectedNumberOfTasks do
@@ -27,7 +27,7 @@ class BoltTest < BasicTestCase
     assert mails.all? { |m| m.subject =~ /Bolt nailed it!/ }, mails
 
     # Invalid task (no run method defined)
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     Mail::TestMailer.deliveries.clear
     Bolt::Helpers.schedule :task => 'invalid'
     H::Log.swallow! 1
@@ -42,7 +42,7 @@ class BoltTest < BasicTestCase
     assert mails.first.body =~ /undefined method `run'/, mails.first
 
     # Exception raising task
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     Mail::TestMailer.deliveries.clear
     Bolt::Helpers.schedule :task => 'exception'
     H::Log.swallow! 1
@@ -59,9 +59,9 @@ class BoltTest < BasicTestCase
 
   def test_applies_task_timeout
     H.announce
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     H::Log.swallow! 1
-    H::Email.count_calls!
+    Bolt::Helpers::Email.count_calls!
 
     Bolt::Helpers.schedule :task => 'timeout', :timeout => 0.01
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
@@ -74,7 +74,7 @@ class BoltTest < BasicTestCase
   # Pass a body to Bolt.email_success
   def test_use_email_body_from_task
     H.announce
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     # create a task giving specific success email options
     body = 'specific body'
     subject = 'specificier subject'
@@ -93,7 +93,7 @@ class BoltTest < BasicTestCase
 
     # create a task giving specific failure email options
     H::Log.swallow! 1
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     Mail::TestMailer.deliveries.clear
     body = 'specific body'
     subject = 'specificier subject'
@@ -113,7 +113,7 @@ class BoltTest < BasicTestCase
 
   def test_saves_task_if_asked
     H.announce
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     # no ask, no tasks
     Bolt::Helpers.no_save_tasks!
     Bolt::Helpers.schedule :task => 'constant_a'
@@ -121,7 +121,7 @@ class BoltTest < BasicTestCase
     assert_equal nil, Bolt::Helpers.tasks
 
     # now ask, then tasks
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     Bolt::Helpers.save_tasks!
     Bolt::Helpers.schedule :task => 'constant_a'
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
@@ -134,7 +134,7 @@ class BoltTest < BasicTestCase
   def test_run_at
     H.announce
     H::Log.swallow! 1
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     Bolt::Helpers.schedule :task => 'schedule', :run_at => Time.now.to_i + 10
     assert_raises Bolt::NotExpectedNumberOfTasks do
       Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
@@ -147,7 +147,7 @@ class BoltTest < BasicTestCase
   # No more than X forks at any given time
   def test_throttle
     H.announce
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     prev = Bolt.throttle
 
     Bolt::Helpers.save_tasks!
@@ -169,14 +169,14 @@ class BoltTest < BasicTestCase
   def test_persist_and_finished
     H.announce
 
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     Bolt::Helpers.schedule :task => 'constant_a'
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
     # Task should be cleaned up
     rows = @coll.find.to_a
     assert_equal 0, rows.count, rows
 
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     Bolt::Helpers.schedule :task => 'constant_a', :persist => true
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
     # Task should not be cleaned up
@@ -188,7 +188,7 @@ class BoltTest < BasicTestCase
 
   def test_silent
     H.announce
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     # default, via email
     Bolt::Helpers.schedule :task => 'constant_a'
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
@@ -197,7 +197,7 @@ class BoltTest < BasicTestCase
     assert_equal 1, mails.count, mails
 
     # silent, saved in the task
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     # Mail::TestMailer.deliveries.clear
     Bolt::Helpers.schedule :task => 'constant_a', :silent => true, :persist => true
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
@@ -220,7 +220,7 @@ class BoltTest < BasicTestCase
     rows = @coll.find.to_a
     assert_equal 1, rows.count, rows
     assert rows.first['notifications'], rows
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     # silent and failing, via email, as the task is not persisting
     Bolt::Helpers.schedule :task => 'invalid', :silent => true, :persist => false
     H::Log.swallow! 1
@@ -233,7 +233,7 @@ class BoltTest < BasicTestCase
 
   def test_composite
     H.announce
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     # run composite task
     Bolt::Helpers.schedule :task => 'composite'
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1, :rounds => 3, :tasks_wait => 0.5)
@@ -246,7 +246,7 @@ class BoltTest < BasicTestCase
     assert_equal 0, rows.count, rows
 
     # now failing on subtasks
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     Mail::TestMailer.deliveries.clear
     Bolt::Helpers.schedule :task => 'composite', :fail => true
     H::Log.swallow! 2
@@ -264,7 +264,7 @@ class BoltTest < BasicTestCase
     H.announce
 
     # schedule several tasks and only process the ones that should be recycled
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     # regular, non dispatched
     Bolt::Helpers.schedule :task => 'constant_a'
 
@@ -287,7 +287,7 @@ class BoltTest < BasicTestCase
 
   def test_sort_ids
     H.announce
-    H::Email.clear
+    Bolt::Helpers::Email.clear
     # Order of creation -> order of return when querying.
     Bolt::Helpers.schedule :task => 'task_1'
     Bolt::Helpers.schedule :task => 'task_2'

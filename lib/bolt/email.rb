@@ -20,7 +20,7 @@ module Bolt
       body += "<br>(Details are on invisible ink...)<div style=\"display:none !important;\">\n\n\n\n"
       body += "Original run request was: #{opts[:task].inspect} </div>"
 
-      H.email :to => to,
+      Bolt::Helpers.email :to => to,
               :body => body,
               :subject => subject,
               :content_type => 'text/html'
@@ -50,7 +50,7 @@ module Bolt
       body += "\n\n trace: #{backtrace.inspect}" if backtrace
       body += "</div>"
 
-      H.email :to => to,
+      Bolt::Helpers.email :to => to,
               :body => body,
               :subject => subject,
               :content_type => 'text/html'

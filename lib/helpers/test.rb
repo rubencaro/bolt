@@ -12,7 +12,7 @@ module Helpers
       m = {}
       m[:system] = { :calls => H::System.calls } if defined?(H::System)
       m[:net] = { :calls => H::Net.calls } if defined?(H::Net)
-      m[:email] = { :calls => H::Email.calls } if defined?(H::Email)
+      m[:email] = { :calls => Bolt::Helpers::Email.calls } if defined?(Bolt::Helpers::Email)
       m
     rescue => ex
       H.log_ex ex
