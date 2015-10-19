@@ -49,7 +49,7 @@ module Bolt
       def self.clear
         #Clear deliveries and calls. (to avoid trace overflow)
         Mail::TestMailer.deliveries.clear
-        @@calls = []
+        count_calls!
       end
 
     end
