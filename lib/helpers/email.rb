@@ -46,6 +46,11 @@ module Helpers
       false
     end
 
+    def self.clear
+      Mail::TestMailer.deliveries.clear
+      @@calls = []
+    end
+
   end
 
   extend Email

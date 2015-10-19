@@ -124,7 +124,11 @@ module Bolt
       i = 0
       loop do
         # perform gets inside a timeout, break if times out
-        ended_task = JSON.parse(main_read.gets)
+        g = main_read.gets
+#        ended_task = JSON.parse(main_read.gets)
+        ended_task = JSON.parse(g)
+        H.spit g
+        H.spit(ended_task)
         ended_task['_id'] = BSON::ObjectId.from_string ended_task['_id']['$oid']
 
         # save task if asked, all metadata is there
@@ -295,8 +299,8 @@ module Bolt
     ensure
       task['finished'] = true
       task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
-      task = is_already_json?(task) ? task : task.to_json
-      opts[:main_write].puts task
+      H.spit task.to_json
+      opts[:main_write].puts task.to_json
       exit! true # avoid fire at_exit hooks inherited from parent!
     end
   end
@@ -343,8 +347,8 @@ module Bolt
     ensure
       task['finished'] = false # periodic!
       task[:test_metadata] = H::Test.get_metadata if CURRENT_ENV == 'test'
-      task = is_already_json?(task) ? task : task.to_json
-      opts[:main_write].puts task
+      H.spit task.to_json
+      opts[:main_write].puts task.to_json
       exit! true # avoid fire at_exit hooks inherited from parent!
     end
   end
@@ -370,20 +374,6 @@ module Bolt
       task['run_at'] += period
     end
   end
-
-  def self.is_already_json?(doc)
-    begin
-      JSON.parse(doc)
-      return true
-    rescue JSON::ParserError
-      return false
-    rescue TypeError
-      return false
-    rescue Exception
-      return false
-    end
-  end
-
 end
 
 if __FILE__ == $0 then
