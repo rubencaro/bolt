@@ -47,6 +47,7 @@ module Helpers
     end
 
     def self.clear
+      #Clear deliveries and calls. (to avoid trace overflow)
       Mail::TestMailer.deliveries.clear
       @@calls = []
     end
