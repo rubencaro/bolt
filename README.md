@@ -341,6 +341,10 @@ Take a look at the code for more details...
 
 ## Changelog
 
+### 0.5.0
+
+* Added sort by _id on mongodb gem. 
+
 ### 0.5.0dev
 
 * Make public
