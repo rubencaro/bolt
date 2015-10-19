@@ -276,4 +276,21 @@ class BoltTest < BasicTestCase
       Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
     end
   end
+
+  def test_sort_ids
+    H.announce
+
+    #Order of creation -> order of return when querying.
+    Bolt::Helpers.schedule :task => 'task_1'
+    Bolt::Helpers.schedule :task => 'task_2'
+    Bolt::Helpers.schedule :task => 'task_3'
+
+    Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
+
+    task = @coll.find.to_a
+    task_2 = @coll.find(task: 'task_2').to_a.first
+
+    assert_equal task.first, task_2
+
+  end
 end

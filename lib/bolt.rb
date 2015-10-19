@@ -112,7 +112,7 @@ module Bolt
     recycled_tasks = coll.find({ '$and' => [
                                   {'dispatched' => { '$exists' => true }},
                                   {'finished' => { '$exists' => false }}
-                                ] }).sort('_id').to_a
+                                ] }, { :sort => '_id' } ).to_a
 
     # main pipe to communicate with children
     main_read, main_write = IO.pipe
@@ -202,7 +202,7 @@ module Bolt
                             { '$or'  => [ { 'run_at' => { '$exists' => false } },
                                           { '$and' => [ { 'run_at' => { '$exists' => true } },
                                                         { 'run_at' => { '$lte' => Time.now.to_i } } ] } ] } ] }
-      tasks = opts[:coll].find(query).limit(slice).sort('_id').to_a
+      tasks = opts[:coll].find(query,{ :sort => '_id' }).limit(slice).to_a
     end
 
     # add recycled_tasks to task list
