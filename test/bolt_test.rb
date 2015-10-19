@@ -288,13 +288,14 @@ class BoltTest < BasicTestCase
   def test_sort_ids
     H.announce
     H::Email.clear
-    #Order of creation -> order of return when querying.
+    # Order of creation -> order of return when querying.
     Bolt::Helpers.schedule :task => 'task_1'
     Bolt::Helpers.schedule :task => 'task_2'
     Bolt::Helpers.schedule :task => 'task_3'
 
     Bolt.dispatch_loop @opts.merge(:tasks_count => 1)
 
+    # The task that should be found must be the second one.
     task = @coll.find.to_a
     task_2 = @coll.find(task: 'task_2').to_a.first
 
