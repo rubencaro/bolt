@@ -32,7 +32,8 @@ check_pids_folder_for_uniqueness "$pids_folder" >> $logs
 [ $FLAGELLUM_PROCESS_COUNT -gt 0 ] && [ $CARNAGE -eq 0 ] && exit 0
 
 # arrancar flagelo
-. $HOME/.bash_profile
+test -s "$HOME/.bash_profile" && source "$HOME/.bash_profile"
+test -s "$HOME/.bashrc" && source "$HOME/.bashrc"
 export CURRENT_ENV=production
 cd $app
 bundle exec ruby $command &>> $logs &
